@@ -58,7 +58,10 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(layout, /generateMetadata/);
   assert.match(atlas, /Exploring the US COVID-19 Pandemic/);
   assert.match(atlas, /<h1>1,158 days<\/h1>/);
-  assert.doesNotMatch(atlas, /that changed America|One national story, 51 local realities/);
+  assert.doesNotMatch(
+    atlas,
+    /that changed America|One national story, 51 local realities|Trace every reported wave|Explore the record|View source data/,
+  );
   assert.doesNotMatch(
     atlas,
     /NYT DATA \/ 2020—2023|Every wave left a different silhouette|Watch the wave move|Reading the map|No two outbreaks moved in lockstep|51 wave fingerprints|Before you interpret the lines/,

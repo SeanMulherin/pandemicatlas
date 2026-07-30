@@ -914,21 +914,6 @@ export function CovidAtlas() {
             </div>
             <p>*Net sum of daily reports, including later corrections.</p>
           </div>
-          <p className="hero-deck">
-            Trace every reported wave—from the first confirmed case through the final day of
-            The New York Times collection.
-          </p>
-          <div className="hero-actions">
-            <a className="primary-button" href="#pulse">Explore the record <span aria-hidden="true">↓</span></a>
-            <a
-              className="text-link"
-              href="https://github.com/nytimes/covid-19-data"
-              target="_blank"
-              rel="noreferrer"
-            >
-              View source data <span aria-hidden="true">↗</span>
-            </a>
-          </div>
         </div>
       </section>
 

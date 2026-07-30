@@ -263,25 +263,6 @@ button {
   line-height: 1;
 }
 
-.hero-deck {
-  max-width: 42rem;
-  margin: clamp(2rem, 5vw, 4rem) 0 0;
-  padding-left: clamp(1rem, 2.2vw, 2.25rem);
-  border-left: 3px solid var(--ink);
-  color: var(--ink-soft);
-  font-family: var(--serif);
-  font-size: clamp(1.15rem, 2vw, 1.55rem);
-  line-height: 1.45;
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 1.3rem 1.8rem;
-  margin-top: clamp(2.1rem, 4vw, 3.6rem);
-}
-
 .primary-button {
   display: inline-flex;
   align-items: center;
@@ -309,25 +290,6 @@ button {
 
 .primary-button span {
   font-size: 1rem;
-}
-
-.text-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--ink);
-  color: var(--ink);
-  font-size: 0.73rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-decoration: none;
-  text-transform: uppercase;
-}
-
-.text-link:hover {
-  border-color: var(--deaths);
-  color: var(--deaths);
 }
 
 .hero-ledger {
@@ -1890,16 +1852,6 @@ button {
 
   .hero-copy h1 {
     font-size: clamp(3.7rem, 18vw, 5.4rem);
-  }
-
-  .hero-deck {
-    padding-left: 1rem;
-    font-size: 1.08rem;
-  }
-
-  .hero-actions {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .hero-ledger {
