@@ -1,9 +1,8 @@
-# COVID Point Process Lab
+# The Pandemic Atlas
 
-An interactive statistical workbench for learning point-process concepts with
-The New York Times U.S. COVID-19 archive. The lab connects daily grouped reports
-to counting processes, intensity estimation, Poisson likelihoods, residual
-diagnostics, and reproducible simulation.
+An interactive historical explorer for The New York Times U.S. COVID-19 dataset.
+It visualizes the national timeline and state-level seven-day averages from
+January 21, 2020 through March 23, 2023.
 
 ## Develop
 
@@ -20,9 +19,9 @@ npm run dev
 npm test
 ```
 
-The site includes local snapshots of the Times's national and state daily-report
-CSV files under `public/data` so the lab does not depend on a live third-party
-request. The interface explicitly distinguishes grouped reporting counts from
-exact event times and exposes its handling of negative reporting corrections.
+The site includes local snapshots of the Times's national and state rolling-
+average CSV files under `public/data` so the explorer does not depend on a live
+third-party request. Data attribution and interpretation caveats are shown in
+the experience.
 
 Source dataset: https://github.com/nytimes/covid-19-data

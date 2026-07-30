@@ -5,7 +5,7 @@ import "./globals.css";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f2f5f1",
+  themeColor: "#f6f2e9",
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,17 +15,17 @@ export async function generateMetadata(): Promise<Metadata> {
     requestHeaders.get("x-forwarded-proto") ??
     (host.startsWith("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
-  const title = "COVID Point Process Lab";
+  const title = "The Pandemic Atlas";
   const description =
-    "Learn counting processes, intensity estimation, Poisson models, diagnostics, and simulation with The New York Times COVID-19 archive.";
+    "Trace U.S. COVID-19 cases and deaths across time and place in The New York Times historical dataset.";
 
   return {
     metadataBase: new URL(origin),
     title,
     description,
     icons: {
-      icon: "/favicon-v2.png",
-      shortcut: "/favicon-v2.png",
+      icon: "/favicon.png",
+      shortcut: "/favicon.png",
     },
     openGraph: {
       title,
@@ -34,10 +34,10 @@ export async function generateMetadata(): Promise<Metadata> {
       url: origin,
       images: [
         {
-          url: `${origin}/og-v2.png`,
-          width: 1734,
-          height: 907,
-          alt: "COVID Point Process Lab — Observe, fit, simulate, and diagnose.",
+          url: `${origin}/og.png`,
+          width: 1731,
+          height: 909,
+          alt: "The Pandemic Atlas — Trace the pandemic, place by place.",
         },
       ],
     },
@@ -45,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
       card: "summary_large_image",
       title,
       description,
-      images: [`${origin}/og-v2.png`],
+      images: [`${origin}/og.png`],
     },
   };
 }
