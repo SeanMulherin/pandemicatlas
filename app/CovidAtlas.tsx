@@ -366,31 +366,6 @@ function SegmentedControl<T extends string>({
   );
 }
 
-function SectionHeading({
-  number,
-  eyebrow,
-  title,
-  children,
-}: {
-  number: string;
-  eyebrow: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="section-heading">
-      <div className="section-kicker">
-        <span>{number}</span>
-        {eyebrow}
-      </div>
-      <div className="section-heading-copy">
-        <h2>{title}</h2>
-        <p>{children}</p>
-      </div>
-    </div>
-  );
-}
-
 function PulseChart({
   points,
   cursorIndex,
@@ -917,33 +892,31 @@ export function CovidAtlas() {
   return (
     <main className="covid-atlas">
       <header className="site-header">
-        <a className="brand-lockup" href="#top" aria-label="The Pandemic Atlas, top">
-          <span className="brand-index">C19</span>
-          <span>The Pandemic Atlas</span>
-        </a>
-        <nav aria-label="Primary navigation">
-          <a href="#pulse">Timeline</a>
-          <a href="#states">States</a>
-          <a href="#compare">Compare</a>
-          <a href="#methodology">Notes</a>
-        </nav>
-        <span className="archive-status"><i aria-hidden="true" /> Historical archive</span>
+        <a className="site-title" href="#top">Exploring the US COVID-19 Pandemic</a>
       </header>
 
       <section className="editorial-hero" id="top">
-        <div className="hero-rail" aria-hidden="true">
-          <span>NYT DATA / 2020—2023</span>
-          <span>Scroll to explore</span>
-        </div>
         <div className="hero-copy">
           <p className="hero-eyebrow">A visual record of COVID-19 in the United States</p>
-          <h1>
-            <span>1,158 days</span>
-            that changed America.
-          </h1>
+          <h1>1,158 days</h1>
+          <div className="hero-ledger" aria-label="Archive summary">
+            <div>
+              <span>Archive span</span>
+              <strong>Jan ’20—Mar ’23</strong>
+            </div>
+            <div>
+              <span>Reported cases*</span>
+              <strong>{compactFormatter.format(archiveTotals.cases)}</strong>
+            </div>
+            <div>
+              <span>Reported deaths*</span>
+              <strong>{compactFormatter.format(archiveTotals.deaths)}</strong>
+            </div>
+            <p>*Net sum of daily reports, including later corrections.</p>
+          </div>
           <p className="hero-deck">
             Trace every reported wave—from the first confirmed case through the final day of
-            The New York Times collection. One national story, 51 local realities.
+            The New York Times collection.
           </p>
           <div className="hero-actions">
             <a className="primary-button" href="#pulse">Explore the record <span aria-hidden="true">↓</span></a>
@@ -956,21 +929,6 @@ export function CovidAtlas() {
               View source data <span aria-hidden="true">↗</span>
             </a>
           </div>
-        </div>
-        <div className="hero-ledger" aria-label="Archive summary">
-          <div>
-            <span>Archive span</span>
-            <strong>Jan ’20—Mar ’23</strong>
-          </div>
-          <div>
-            <span>Reported cases*</span>
-            <strong>{compactFormatter.format(archiveTotals.cases)}</strong>
-          </div>
-          <div>
-            <span>Reported deaths*</span>
-            <strong>{compactFormatter.format(archiveTotals.deaths)}</strong>
-          </div>
-          <p>*Net sum of daily reports, including later corrections.</p>
         </div>
       </section>
 
@@ -1013,15 +971,6 @@ export function CovidAtlas() {
       </div>
 
       <section className="atlas-section pulse-section" id="pulse">
-        <SectionHeading
-          number="01"
-          eyebrow="The national pulse"
-          title="Every wave left a different silhouette."
-        >
-          Move across the chart—or focus it and use the arrow keys—to link every view to a
-          single day. Values are smoothed with a seven-day rolling average.
-        </SectionHeading>
-
         <div className="pulse-summary">
           <div>
             <span>Selected day</span>
@@ -1054,15 +1003,6 @@ export function CovidAtlas() {
       </section>
 
       <section className="atlas-section states-section" id="states">
-        <SectionHeading
-          number="02"
-          eyebrow="A country in motion"
-          title="Watch the wave move, state by state."
-        >
-          Press play or scrub the archive. Each tile’s intensity is scaled against the highest
-          state value on that day; select up to four states for a direct comparison below.
-        </SectionHeading>
-
         <div className="time-console">
           <button
             type="button"
@@ -1132,32 +1072,10 @@ export function CovidAtlas() {
               <span>Lower</span><i aria-hidden="true" /><span>Higher</span>
             </div>
           </div>
-
-          <aside className="map-note">
-            <span className="note-index">Reading the map</span>
-            <h3>Intensity is relative, not absolute.</h3>
-            <p>
-              The darkest tile marks that day’s state maximum. Switch to “Per 100k” for a
-              population-adjusted comparison; raw averages naturally favor larger states.
-            </p>
-            <div className="selected-counter">
-              <strong>{selectedStates.length}/{MAX_SELECTED_STATES}</strong>
-              <span>states selected</span>
-            </div>
-          </aside>
         </div>
       </section>
 
       <section className="atlas-section comparison-section" id="compare">
-        <SectionHeading
-          number="03"
-          eyebrow="Compare trajectories"
-          title="No two outbreaks moved in lockstep."
-        >
-          Selected states share a date axis. Use per-capita values for the fairest comparison
-          across states of different sizes.
-        </SectionHeading>
-
         <div className="comparison-panel">
           <div className="comparison-toolbar">
             <div className="state-chips" aria-label="Selected states">
@@ -1245,15 +1163,6 @@ export function CovidAtlas() {
       </section>
 
       <section className="atlas-section fingerprints-section" id="fingerprints">
-        <SectionHeading
-          number="04"
-          eyebrow="51 wave fingerprints"
-          title="The whole archive, compressed into a glance."
-        >
-          Each barcode preserves the shape of a state’s selected-period trajectory. Taller
-          strokes mark higher reported values within that state—not between states.
-        </SectionHeading>
-
         <div className="fingerprint-grid">
           {[...STATE_TILES]
             .sort((a, b) => a.name.localeCompare(b.name))
@@ -1287,10 +1196,6 @@ export function CovidAtlas() {
       </section>
 
       <section className="methodology-section" id="methodology">
-        <div className="methodology-intro">
-          <span>Before you interpret the lines</span>
-          <h2>This is a record of reporting—not a perfect count of infection.</h2>
-        </div>
         <div className="methodology-grid">
           <article>
             <span>01 / Source</span>
@@ -1337,7 +1242,6 @@ export function CovidAtlas() {
       </section>
 
       <footer className="atlas-footer">
-        <div className="brand-lockup"><span className="brand-index">C19</span><span>The Pandemic Atlas</span></div>
         <p>A historical data study. Not a live public-health dashboard.</p>
         <a href="#top">Back to top <span aria-hidden="true">↑</span></a>
       </footer>

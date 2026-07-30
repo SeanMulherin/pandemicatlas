@@ -37,13 +37,14 @@ test("server-renders the finished Pandemic Atlas shell", async () => {
 });
 
 test("ships the complete local archive and bespoke preview assets", async () => {
-  const [national, states, socialCard, packageJson, page, layout] = await Promise.all([
+  const [national, states, socialCard, packageJson, page, layout, atlas] = await Promise.all([
     readFile(new URL("../public/data/us.csv", import.meta.url), "utf8"),
     readFile(new URL("../public/data/us-states.csv", import.meta.url), "utf8"),
     readFile(new URL("../public/og.png", import.meta.url)),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/CovidAtlas.tsx", import.meta.url), "utf8"),
   ]);
 
   assert.match(national, /^date,geoid,cases,cases_avg,cases_avg_per_100k/);
@@ -55,6 +56,13 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.match(page, /<CovidAtlas \/>/);
   assert.match(layout, /generateMetadata/);
+  assert.match(atlas, /Exploring the US COVID-19 Pandemic/);
+  assert.match(atlas, /<h1>1,158 days<\/h1>/);
+  assert.doesNotMatch(atlas, /that changed America|One national story, 51 local realities/);
+  assert.doesNotMatch(
+    atlas,
+    /NYT DATA \/ 2020—2023|Every wave left a different silhouette|Watch the wave move|Reading the map|No two outbreaks moved in lockstep|51 wave fingerprints|Before you interpret the lines/,
+  );
 
   await assert.rejects(access(new URL("../app/_sites-preview/SkeletonPreview.tsx", import.meta.url)));
   await access(new URL("../public/favicon.png", import.meta.url));
