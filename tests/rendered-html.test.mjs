@@ -57,6 +57,8 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(page, /<CovidAtlas \/>/);
   assert.match(layout, /generateMetadata/);
   assert.match(atlas, /Exploring the US COVID-19 Pandemic/);
+  assert.match(atlas, /href="https:\/\/seanmulherin\.github\.io\/">Home<\/a>/);
+  assert.match(atlas, /Dynamic Temporal View Grouped by State/);
   assert.match(atlas, /<h1>1,158 days<\/h1>/);
   assert.doesNotMatch(
     atlas,

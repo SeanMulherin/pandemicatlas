@@ -892,6 +892,7 @@ export function CovidAtlas() {
   return (
     <main className="covid-atlas">
       <header className="site-header">
+        <a className="home-button" href="https://seanmulherin.github.io/">Home</a>
         <a className="site-title" href="#top">Exploring the US COVID-19 Pandemic</a>
       </header>
 
@@ -988,6 +989,7 @@ export function CovidAtlas() {
       </section>
 
       <section className="atlas-section states-section" id="states">
+        <h2 className="states-title">Dynamic Temporal View Grouped by State</h2>
         <div className="time-console">
           <button
             type="button"

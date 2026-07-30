@@ -97,12 +97,37 @@ button {
 }
 
 .site-title {
+  max-width: calc(100% - 12rem);
   color: var(--ink);
   font-family: var(--serif);
   font-size: clamp(1.05rem, 2.2vw, 1.45rem);
   letter-spacing: -0.015em;
   text-align: center;
   text-decoration: none;
+}
+
+.home-button {
+  position: absolute;
+  left: var(--page-gutter);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.35rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper-light);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.home-button:hover {
+  background: var(--paper-light);
+  color: var(--ink);
 }
 
 .brand-lockup {
@@ -646,6 +671,16 @@ button {
 
 .states-section {
   background: var(--paper-deep);
+}
+
+.states-title {
+  max-width: 18ch;
+  margin: 0 0 clamp(2.5rem, 5vw, 4rem);
+  font-family: var(--serif);
+  font-size: clamp(2.7rem, 5.7vw, 5.6rem);
+  font-weight: 400;
+  letter-spacing: -0.05em;
+  line-height: 0.96;
 }
 
 .time-console {
@@ -1848,6 +1883,19 @@ button {
 @media (max-width: 34rem) {
   .site-header {
     justify-content: center;
+  }
+
+  .home-button {
+    left: 0.7rem;
+    min-height: 2rem;
+    padding: 0.4rem 0.58rem;
+    font-size: 0.54rem;
+  }
+
+  .site-title {
+    max-width: calc(100% - 7.5rem);
+    font-size: 0.96rem;
+    line-height: 1.12;
   }
 
   .hero-copy h1 {
