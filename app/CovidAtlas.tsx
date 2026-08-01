@@ -10,6 +10,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import MobilityAtlas from "./MobilityAtlas";
 
 type Metric = "cases" | "deaths";
 type Scale = "average" | "perCapita";
@@ -1188,6 +1189,8 @@ export function CovidAtlas() {
             })}
         </div>
       </section>
+
+      <MobilityAtlas />
 
       <section className="methodology-section" id="methodology">
         <div className="methodology-grid">
