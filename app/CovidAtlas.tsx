@@ -957,6 +957,7 @@ export function CovidAtlas() {
       </div>
 
       <section className="atlas-section pulse-section" id="pulse">
+        <h2 className="analysis-title">Nationwide Incidence</h2>
         <div className="pulse-summary">
           <div>
             <span>Selected day</span>
@@ -986,10 +987,60 @@ export function CovidAtlas() {
             inspect a day.
           </figcaption>
         </figure>
+
+        <div className="statewide-incidence">
+          <h2 className="analysis-title">Statewide Incidence</h2>
+          <div className="comparison-panel">
+            <div className="comparison-toolbar">
+              <div className="state-chips" aria-label="Selected states">
+                {selectedStates.length === 0 ? (
+                  <p>Select a state from the map, ranking, or wave cards.</p>
+                ) : (
+                  selectedStates.map((state, index) => (
+                    <button
+                      type="button"
+                      className="state-chip"
+                      key={state}
+                      onClick={() => toggleState(state)}
+                      style={{ "--series-color": SERIES_COLORS[index] } as CSSProperties}
+                      aria-label={`Remove ${state} from comparison`}
+                    >
+                      <i aria-hidden="true" /> {state} <span aria-hidden="true">×</span>
+                    </button>
+                  ))
+                )}
+              </div>
+              <p className="selection-message" aria-live="polite">{selectionMessage}</p>
+            </div>
+
+            {selectedStates.length > 0 ? (
+              <>
+                <ComparisonChart
+                  dates={activeDates}
+                  series={comparisonSeries}
+                  cursorIndex={selectedIndex}
+                  scale={scale}
+                />
+                <div className="comparison-readout" aria-label={`Values on ${formatFullDate(selectedDate)}`}>
+                  <span>{formatShortDate(selectedDate)}</span>
+                  {comparisonSeries.map((series) => (
+                    <div key={series.name}>
+                      <i style={{ backgroundColor: series.color }} aria-hidden="true" />
+                      <span>{series.name}</span>
+                      <strong>{formatValue(series.values[selectedIndex] ?? 0, scale)}</strong>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="comparison-empty">Choose at least one state to draw a trajectory.</div>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className="atlas-section states-section" id="states">
-        <h2 className="states-title">Dynamic Temporal View Grouped by State</h2>
+        <h2 className="states-title">Dynamic Statewide Incidence</h2>
         <div className="time-console">
           <button
             type="button"
@@ -1063,58 +1114,14 @@ export function CovidAtlas() {
       </section>
 
       <section className="atlas-section comparison-section" id="compare">
-        <div className="comparison-panel">
-          <div className="comparison-toolbar">
-            <div className="state-chips" aria-label="Selected states">
-              {selectedStates.length === 0 ? (
-                <p>Select a state from the map, ranking, or wave cards.</p>
-              ) : (
-                selectedStates.map((state, index) => (
-                  <button
-                    type="button"
-                    className="state-chip"
-                    key={state}
-                    onClick={() => toggleState(state)}
-                    style={{ "--series-color": SERIES_COLORS[index] } as CSSProperties}
-                    aria-label={`Remove ${state} from comparison`}
-                  >
-                    <i aria-hidden="true" /> {state} <span aria-hidden="true">×</span>
-                  </button>
-                ))
-              )}
-            </div>
-            <p className="selection-message" aria-live="polite">{selectionMessage}</p>
-          </div>
-
-          {selectedStates.length > 0 ? (
-            <>
-              <ComparisonChart
-                dates={activeDates}
-                series={comparisonSeries}
-                cursorIndex={selectedIndex}
-                scale={scale}
-              />
-              <div className="comparison-readout" aria-label={`Values on ${formatFullDate(selectedDate)}`}>
-                <span>{formatShortDate(selectedDate)}</span>
-                {comparisonSeries.map((series) => (
-                  <div key={series.name}>
-                    <i style={{ backgroundColor: series.color }} aria-hidden="true" />
-                    <span>{series.name}</span>
-                    <strong>{formatValue(series.values[selectedIndex] ?? 0, scale)}</strong>
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="comparison-empty">Choose at least one state to draw a trajectory.</div>
-          )}
-        </div>
-
         <div className="ranking-panel">
           <div className="ranking-heading">
             <div>
-              <span>Daily ranking</span>
-              <h3>Where the reported burden was highest</h3>
+              <h2>Statewide Burden</h2>
+              <p>
+                Burden is each state’s seven-day average of reported cases or deaths on the
+                selected date; “Per 100k” adjusts the comparison for population.
+              </p>
             </div>
             <time dateTime={selectedDate}>{formatFullDate(selectedDate)}</time>
           </div>
