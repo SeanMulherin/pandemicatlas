@@ -20,6 +20,8 @@ clone. `--output=` and `--labels=` override the generated JSON path and the
 existing atlas JSON used for county display names.
 
 The atlas intentionally reports `visitor_flows`, the detected SafeGraph sample,
-rather than `pop_flows`, the population-inferred estimate. Records involving
-jurisdictions outside the atlas's 50-state-plus-D.C. geography are counted in
-the quality report and excluded from the displayed totals.
+rather than `pop_flows`, the population-inferred estimate. The build replaces
+the NYT case archive's combined New York City and Alaska labels with Kang's
+official county GEOIDs. Records involving jurisdictions outside the atlas's
+50-state-plus-D.C. geography are counted in the quality report and excluded
+from the displayed totals.

@@ -127,13 +127,35 @@ load_county_lookup <- function(path) {
     stop("The label JSON does not contain county fips/state/county fields", call. = FALSE)
   }
   lookup <- as.data.table(prior$counties)[, .(
-    fips = sprintf("%05d", as.integer(fips)),
+    fips = as.character(fips),
     state = as.character(state),
     county = as.character(county)
   )]
+  # The NYT case archive combines New York City's boroughs and several Alaska
+  # county equivalents. Kang uses their official five-digit county GEOIDs, so
+  # replace the three display-only aggregates with the ten source geographies.
+  lookup <- lookup[
+    grepl("^[0-9]{5}$", fips) & !fips %chin% c("02997", "02998")
+  ]
+  lookup <- rbind(
+    lookup,
+    data.table(
+      fips = c(
+        "02060", "02105", "02158", "02164", "02282",
+        "36005", "36047", "36061", "36081", "36085"
+      ),
+      state = c(rep("Alaska", 5), rep("New York", 5)),
+      county = c(
+        "Bristol Bay Borough", "Hoonah-Angoon Census Area", "Kusilvak Census Area",
+        "Lake and Peninsula Borough", "Yakutat City and Borough",
+        "Bronx", "Kings", "New York", "Queens", "Richmond"
+      )
+    ),
+    use.names = TRUE
+  )
   lookup <- unique(lookup, by = "fips")
-  if (nrow(lookup) != 3135L || uniqueN(lookup$state) != 51L) {
-    stop("Expected the atlas's 3,135 counties across 50 states plus D.C.", call. = FALSE)
+  if (nrow(lookup) != 3142L || uniqueN(lookup$state) != 51L) {
+    stop("Expected 3,142 Kang county geographies across 50 states plus D.C.", call. = FALSE)
   }
   setkey(lookup, fips)
   lookup

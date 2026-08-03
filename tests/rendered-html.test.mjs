@@ -106,12 +106,12 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.equal(mobility.meta.sourceFileCount, 156);
   assert.equal(mobility.meta.metric, "visitor_flows");
   assert.equal(mobility.meta.rowCount, 92_042_033);
-  assert.equal(mobility.meta.validRowCount, 90_658_879);
-  assert.equal(mobility.meta.totalObserved, 20_882_085_646);
-  assert.equal(mobility.meta.countyCount, 3_135);
+  assert.equal(mobility.meta.validRowCount, 91_607_589);
+  assert.equal(mobility.meta.totalObserved, 21_337_980_141);
+  assert.equal(mobility.meta.countyCount, 3_142);
   assert.equal(mobility.meta.stateCount, 51);
   assert.equal(mobility.statePairs.length, 1_275);
-  assert.equal(mobility.counties.length, 3_135);
+  assert.equal(mobility.counties.length, 3_142);
   assert.equal(mobility.quality.malformedRows, 0);
   assert.equal(mobility.quality.negativeValueRows, 0);
   assert.equal(mobility.quality.duplicatePairsWithinSourceFile, 0);
