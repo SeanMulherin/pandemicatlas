@@ -1062,7 +1062,7 @@ button {
 
 .comparison-readout {
   display: grid;
-  grid-template-columns: auto repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   min-height: 4.8rem;
   border-top: 1px solid var(--rule-strong);
 }
@@ -1397,6 +1397,15 @@ button {
     );
 }
 
+.mobility-section-heading {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.mobility-section-heading .section-heading-copy h2 {
+  max-width: 18ch;
+}
+
 .mobility-ledger {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1526,6 +1535,15 @@ button {
   gap: clamp(2rem, 5vw, 7rem);
   align-items: start;
   margin-bottom: clamp(2rem, 4vw, 3.5rem);
+}
+
+.mobility-figure-heading-plain {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+.mobility-figure-heading-plain > div {
+  max-width: 62rem;
 }
 
 .mobility-figure-heading > span {

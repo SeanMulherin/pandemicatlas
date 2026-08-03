@@ -617,10 +617,9 @@ export default function MobilityAtlas() {
   if (!data) {
     return (
       <section className="atlas-section mobility-section" id="mobility">
-        <div className="section-heading">
-          <p className="section-kicker"><span>05</span> Human mobility</p>
+        <div className="section-heading mobility-section-heading">
           <div className="section-heading-copy">
-            <h2>How America moved.</h2>
+            <h2>Human Mobility Patterns</h2>
             <p>{error || "Preparing 4 million county-to-county mobility records…"}</p>
           </div>
         </div>
@@ -638,20 +637,21 @@ export default function MobilityAtlas() {
 
   return (
     <section className="atlas-section mobility-section" id="mobility">
-      <div className="section-heading">
-        <p className="section-kicker"><span>05</span> Human mobility</p>
+      <div className="section-heading mobility-section-heading">
         <div className="section-heading-copy">
-          <h2>How America moved.</h2>
+          <h2>Human Mobility Patterns</h2>
           <p>
-            Follow the strongest interstate ties, then find counties that attracted or sent out
-            the most cross-county travel during the first pandemic spring and summer.
+            Human mobility here means origin-to-destination movement inferred from anonymous
+            cellphone-location visits. The underlying SafeGraph sample represents roughly 10%
+            of the U.S. population and includes travel across transportation modes, although it
+            does not identify the mode used.
           </p>
         </div>
       </div>
 
       <div className="mobility-ledger">
         <div>
-          <span>Coverage</span>
+          <span>Coverage in this atlas</span>
           <strong>{formatDate(data.meta.coverageStart)}—{formatDate(data.meta.coverageEnd)}</strong>
         </div>
         <div>
@@ -687,8 +687,7 @@ export default function MobilityAtlas() {
       </div>
 
       <article className="mobility-figure">
-        <div className="mobility-figure-heading">
-          <span>01 / Interstate network</span>
+        <div className="mobility-figure-heading mobility-figure-heading-plain">
           <div>
             <h3>Where state borders were most porous</h3>
             <p>
@@ -707,8 +706,7 @@ export default function MobilityAtlas() {
       </article>
 
       <article className="mobility-figure">
-        <div className="mobility-figure-heading">
-          <span>02 / County hubs</span>
+        <div className="mobility-figure-heading mobility-figure-heading-plain">
           <div>
             <h3>Which counties pulled travel in—or pushed it out</h3>
             <p>
@@ -722,13 +720,15 @@ export default function MobilityAtlas() {
 
       <div className="mobility-source-note">
         <p>
-          *Cumulative observed travelers are movement observations, not unique individuals.
-          This file has no daily field, so both figures summarize the full period rather than a
-          time series.
+          *These figures use detected visitor flows rather than population-inferred estimates.
+          Counts are cumulative movement observations, not unique individuals. The supplied
+          file has no daily field, so both figures summarize its full period.
         </p>
         <p>
-          Source: Kang county traveler totals · {formatInteger(data.meta.validRowCount)} valid
-          origin-destination records · {cleanChecks === 0 ? "No structural issues found" : `${cleanChecks} structural issues flagged`}
+          The official Kang daily county archive spans Jan. 1, 2019—Apr. 15, 2021; it does not
+          reach Mar. 2023. This atlas uses the supplied Mar. 12—Jul. 19, 2020 aggregate ·
+          {" "}{formatInteger(data.meta.validRowCount)} valid origin-destination records ·
+          {" "}{cleanChecks === 0 ? "No structural issues found" : `${cleanChecks} structural issues flagged`}
         </p>
       </div>
     </section>

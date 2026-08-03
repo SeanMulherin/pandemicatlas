@@ -56,7 +56,7 @@ interface ComparisonSeries {
 
 const ARCHIVE_START = "2020-01-21";
 const ARCHIVE_END = "2023-03-23";
-const MAX_SELECTED_STATES = 4;
+const MAX_SELECTED_STATES = 10;
 
 const PERIODS: ReadonlyArray<{
   id: PeriodId;
@@ -157,7 +157,18 @@ const STATE_TILES: readonly StateTile[] = [
 ];
 
 const STATE_NAMES = new Set(STATE_TILES.map((tile) => tile.name));
-const SERIES_COLORS = ["#0072b2", "#a9363e", "#8a5a00", "#6b4c9a"];
+const SERIES_COLORS = [
+  "#0072b2",
+  "#a9363e",
+  "#8a5a00",
+  "#6b4c9a",
+  "#00876c",
+  "#d65f00",
+  "#b0448a",
+  "#007f9e",
+  "#7a4e00",
+  "#4f5d75",
+];
 
 const fullDateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "long",
@@ -852,7 +863,7 @@ export function CovidAtlas() {
         return;
       }
       if (selectedStates.length >= MAX_SELECTED_STATES) {
-        setSelectionMessage("Remove a state before adding another; comparisons hold up to four.");
+        setSelectionMessage("Remove a state before adding another; comparisons hold up to ten.");
         return;
       }
       setSelectedStates([...selectedStates, state]);
@@ -992,9 +1003,9 @@ export function CovidAtlas() {
       </section>
 
       <section className="atlas-section states-section" id="states">
-        <h2 className="states-title">Statewide</h2>
+        <h2 className="states-title">Statewide Incidence</h2>
         <p className="states-instructions">
-          Select the states you wish to highlight for evaluation. Choose up to four state tiles;
+          Select the states you wish to highlight for evaluation. Choose up to ten state tiles;
           your selection carries into the incidence comparison and burden ranking below.
         </p>
         <div className="time-console">
@@ -1070,7 +1081,7 @@ export function CovidAtlas() {
       </section>
 
       <section className="atlas-section statewide-incidence-section" id="statewide-incidence">
-        <h2 className="analysis-title">Statewide Incidence</h2>
+        <h2 className="analysis-title">Statewide Waves</h2>
         <div className="comparison-panel">
           <div className="comparison-toolbar">
             <div className="state-chips" aria-label="Selected states">
@@ -1209,9 +1220,9 @@ export function CovidAtlas() {
             <div className="methodology-secondary-source">
               <h4>Kang county traveler totals</h4>
               <p>
-                The mobility figures use county origin-destination traveler totals covering
-                March 12—July 19, 2020. The observations are cumulative movements, not unique
-                individuals.
+                Kang’s official daily county archive runs from January 1, 2019 through April 15,
+                2021. The mobility figures use the supplied March 12—July 19, 2020 aggregate;
+                observations are cumulative movements, not unique individuals.
               </p>
             </div>
           </article>

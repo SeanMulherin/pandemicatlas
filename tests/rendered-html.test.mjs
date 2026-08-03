@@ -63,16 +63,20 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /href="https:\/\/seanmulherin\.github\.io\/">Home<\/a>/);
   assert.match(atlas, /Nationwide Incidence/);
   assert.match(atlas, /Statewide Incidence/);
-  assert.match(atlas, /<h2 className="states-title">Statewide<\/h2>/);
+  assert.match(atlas, /<h2 className="states-title">Statewide Incidence<\/h2>/);
+  assert.match(atlas, /<h2 className="analysis-title">Statewide Waves<\/h2>/);
   assert.match(atlas, /Select the states you wish to highlight for evaluation/);
+  assert.match(atlas, /Choose up to ten state tiles/);
+  assert.match(atlas, /MAX_SELECTED_STATES = 10/);
   assert.match(atlas, /Statewide Burden/);
   assert.match(atlas, /<MobilityAtlas \/>/);
   assert.match(atlas, /Burden is each state’s seven-day average/);
   assert.ok(
-    atlas.indexOf('<h2 className="states-title">Statewide</h2>')
-      < atlas.indexOf('<h2 className="analysis-title">Statewide Incidence</h2>'),
+    atlas.indexOf('<h2 className="states-title">Statewide Incidence</h2>')
+      < atlas.indexOf('<h2 className="analysis-title">Statewide Waves</h2>'),
   );
   assert.match(atlas, /Kang county traveler totals/);
+  assert.match(atlas, /January 1, 2019 through April 15/);
   assert.match(atlas, /cumulative movements, not unique/);
   assert.doesNotMatch(
     atlas,
@@ -87,10 +91,14 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     atlas,
     /NYT DATA \/ 2020—2023|Every wave left a different silhouette|Watch the wave move|Reading the map|No two outbreaks moved in lockstep|51 wave fingerprints|Before you interpret the lines/,
   );
-  assert.match(mobilityAtlas, /How America moved\./);
+  assert.match(mobilityAtlas, /Human Mobility Patterns/);
+  assert.match(mobilityAtlas, /roughly 10%/);
+  assert.match(mobilityAtlas, /includes travel across transportation modes/);
+  assert.match(mobilityAtlas, /official Kang daily county archive spans Jan\. 1, 2019—Apr\. 15, 2021/);
   assert.match(mobilityAtlas, /Where state borders were most porous/);
   assert.match(mobilityAtlas, /Which counties pulled travel in—or pushed it out/);
   assert.match(mobilityAtlas, /not unique individuals/);
+  assert.doesNotMatch(mobilityAtlas, /05<\/span> Human mobility|01 \/ Interstate network|02 \/ County hubs/);
   assert.equal(mobility.meta.coverageStart, "2020-03-12");
   assert.equal(mobility.meta.coverageEnd, "2020-07-19");
   assert.equal(mobility.meta.validRowCount, 4_051_110);
