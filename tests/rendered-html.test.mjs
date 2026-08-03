@@ -63,12 +63,21 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /href="https:\/\/seanmulherin\.github\.io\/">Home<\/a>/);
   assert.match(atlas, /Nationwide Incidence/);
   assert.match(atlas, /Statewide Incidence/);
-  assert.match(atlas, /Dynamic Statewide Incidence/);
+  assert.match(atlas, /<h2 className="states-title">Statewide<\/h2>/);
+  assert.match(atlas, /Select the states you wish to highlight for evaluation/);
   assert.match(atlas, /Statewide Burden/);
   assert.match(atlas, /<MobilityAtlas \/>/);
   assert.match(atlas, /Burden is each state’s seven-day average/);
-  assert.ok(atlas.indexOf("Statewide Incidence") < atlas.indexOf("Dynamic Statewide Incidence"));
-  assert.doesNotMatch(atlas, /Dynamic Temporal View Grouped by State|Daily ranking|Where the reported burden was highest/);
+  assert.ok(
+    atlas.indexOf('<h2 className="states-title">Statewide</h2>')
+      < atlas.indexOf('<h2 className="analysis-title">Statewide Incidence</h2>'),
+  );
+  assert.match(atlas, /Kang county traveler totals/);
+  assert.match(atlas, /cumulative movements, not unique/);
+  assert.doesNotMatch(
+    atlas,
+    /Dynamic Statewide Incidence|Dynamic Temporal View Grouped by State|Daily ranking|Where the reported burden was highest/,
+  );
   assert.match(atlas, /<h1>1,158 days<\/h1>/);
   assert.doesNotMatch(
     atlas,

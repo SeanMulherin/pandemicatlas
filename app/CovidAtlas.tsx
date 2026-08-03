@@ -989,59 +989,14 @@ export function CovidAtlas() {
           </figcaption>
         </figure>
 
-        <div className="statewide-incidence">
-          <h2 className="analysis-title">Statewide Incidence</h2>
-          <div className="comparison-panel">
-            <div className="comparison-toolbar">
-              <div className="state-chips" aria-label="Selected states">
-                {selectedStates.length === 0 ? (
-                  <p>Select a state from the map, ranking, or wave cards.</p>
-                ) : (
-                  selectedStates.map((state, index) => (
-                    <button
-                      type="button"
-                      className="state-chip"
-                      key={state}
-                      onClick={() => toggleState(state)}
-                      style={{ "--series-color": SERIES_COLORS[index] } as CSSProperties}
-                      aria-label={`Remove ${state} from comparison`}
-                    >
-                      <i aria-hidden="true" /> {state} <span aria-hidden="true">×</span>
-                    </button>
-                  ))
-                )}
-              </div>
-              <p className="selection-message" aria-live="polite">{selectionMessage}</p>
-            </div>
-
-            {selectedStates.length > 0 ? (
-              <>
-                <ComparisonChart
-                  dates={activeDates}
-                  series={comparisonSeries}
-                  cursorIndex={selectedIndex}
-                  scale={scale}
-                />
-                <div className="comparison-readout" aria-label={`Values on ${formatFullDate(selectedDate)}`}>
-                  <span>{formatShortDate(selectedDate)}</span>
-                  {comparisonSeries.map((series) => (
-                    <div key={series.name}>
-                      <i style={{ backgroundColor: series.color }} aria-hidden="true" />
-                      <span>{series.name}</span>
-                      <strong>{formatValue(series.values[selectedIndex] ?? 0, scale)}</strong>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <div className="comparison-empty">Choose at least one state to draw a trajectory.</div>
-            )}
-          </div>
-        </div>
       </section>
 
       <section className="atlas-section states-section" id="states">
-        <h2 className="states-title">Dynamic Statewide Incidence</h2>
+        <h2 className="states-title">Statewide</h2>
+        <p className="states-instructions">
+          Select the states you wish to highlight for evaluation. Choose up to four state tiles;
+          your selection carries into the incidence comparison and burden ranking below.
+        </p>
         <div className="time-console">
           <button
             type="button"
@@ -1111,6 +1066,56 @@ export function CovidAtlas() {
               <span>Lower</span><i aria-hidden="true" /><span>Higher</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="atlas-section statewide-incidence-section" id="statewide-incidence">
+        <h2 className="analysis-title">Statewide Incidence</h2>
+        <div className="comparison-panel">
+          <div className="comparison-toolbar">
+            <div className="state-chips" aria-label="Selected states">
+              {selectedStates.length === 0 ? (
+                <p>Select states from the map above to begin the evaluation.</p>
+              ) : (
+                selectedStates.map((state, index) => (
+                  <button
+                    type="button"
+                    className="state-chip"
+                    key={state}
+                    onClick={() => toggleState(state)}
+                    style={{ "--series-color": SERIES_COLORS[index] } as CSSProperties}
+                    aria-label={`Remove ${state} from comparison`}
+                  >
+                    <i aria-hidden="true" /> {state} <span aria-hidden="true">×</span>
+                  </button>
+                ))
+              )}
+            </div>
+            <p className="selection-message" aria-live="polite">{selectionMessage}</p>
+          </div>
+
+          {selectedStates.length > 0 ? (
+            <>
+              <ComparisonChart
+                dates={activeDates}
+                series={comparisonSeries}
+                cursorIndex={selectedIndex}
+                scale={scale}
+              />
+              <div className="comparison-readout" aria-label={`Values on ${formatFullDate(selectedDate)}`}>
+                <span>{formatShortDate(selectedDate)}</span>
+                {comparisonSeries.map((series) => (
+                  <div key={series.name}>
+                    <i style={{ backgroundColor: series.color }} aria-hidden="true" />
+                    <span>{series.name}</span>
+                    <strong>{formatValue(series.values[selectedIndex] ?? 0, scale)}</strong>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="comparison-empty">Choose at least one state to draw a trajectory.</div>
+          )}
         </div>
       </section>
 
@@ -1201,6 +1206,14 @@ export function CovidAtlas() {
               This explorer reads local snapshots of the Times’s public U.S. and state data.
               The archive ends March 23, 2023, when its recurring collection ended.
             </p>
+            <div className="methodology-secondary-source">
+              <h4>Kang county traveler totals</h4>
+              <p>
+                The mobility figures use county origin-destination traveler totals covering
+                March 12—July 19, 2020. The observations are cumulative movements, not unique
+                individuals.
+              </p>
+            </div>
           </article>
           <article>
             <span>02 / Smoothing</span>
@@ -1231,7 +1244,7 @@ export function CovidAtlas() {
           </article>
         </div>
         <div className="source-strip">
-          <p>Data: The New York Times · Jan. 21, 2020—Mar. 23, 2023</p>
+          <p>Data: The New York Times · Jan. 21, 2020—Mar. 23, 2023 · Kang mobility · Mar. 12—Jul. 19, 2020</p>
           <a href="https://github.com/nytimes/covid-19-data" target="_blank" rel="noreferrer">
             Repository & methodology <span aria-hidden="true">↗</span>
           </a>
