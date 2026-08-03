@@ -15,11 +15,11 @@ notebook["metadata"]["kernelspec"] = {
 }
 notebook["cells"] = [
     nbf.v4.new_markdown_cell(
-        "# Kang County Mobility — Data Quality & Web Aggregation\n\n"
+        "# Kang County Mobility — Legacy Extract Audit\n\n"
         "## tl;dr\n\n"
-        "The executed cell below streams the supplied county origin–destination file, "
-        "prints the observed coverage and quality checks, and produces the compact JSON "
-        "used by the Pandemic Atlas mobility figures."
+        "This notebook audits the supplied March–July 2020 county origin–destination "
+        "extract. The live Pandemic Atlas data is generated from the complete weekly "
+        "archive by `prepare_kang_mobility_all.R`."
     ),
     nbf.v4.new_code_cell(
         "from pathlib import Path\n"
@@ -30,7 +30,7 @@ notebook["cells"] = [
         "    ROOT = ROOT.parent\n"
         "sys.path.insert(0, str(ROOT / 'analysis'))\n"
         "from prepare_kang_mobility import DEFAULT_SOURCE, profile_and_aggregate\n\n"
-        "OUTPUT = ROOT / 'public/data/mobility.json'\n"
+        "OUTPUT = ROOT / 'public/data/mobility_legacy_2020.json'\n"
         "profile = profile_and_aggregate(DEFAULT_SOURCE, OUTPUT)\n"
         "meta = profile['meta']\n"
         "quality = profile['quality']\n"

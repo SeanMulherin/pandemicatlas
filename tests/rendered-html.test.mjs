@@ -76,7 +76,8 @@ test("ships the complete local archive and bespoke preview assets", async () => 
       < atlas.indexOf('<h2 className="analysis-title">Statewide Waves</h2>'),
   );
   assert.match(atlas, /Kang county traveler totals/);
-  assert.match(atlas, /January 1, 2019 through April 15/);
+  assert.match(atlas, /all 156 official weekly county files/);
+  assert.match(atlas, /January 7, 2019 through January 2, 2022/);
   assert.match(atlas, /cumulative movements, not unique/);
   assert.doesNotMatch(
     atlas,
@@ -94,20 +95,28 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityAtlas, /Human Mobility Patterns/);
   assert.match(mobilityAtlas, /roughly 10%/);
   assert.match(mobilityAtlas, /includes travel across transportation modes/);
-  assert.match(mobilityAtlas, /official Kang daily county archive spans Jan\. 1, 2019—Apr\. 15, 2021/);
+  assert.match(mobilityAtlas, /daily county release ends Apr\. 15, 2021/);
+  assert.match(mobilityAtlas, /weekly county release continues/);
   assert.match(mobilityAtlas, /Where state borders were most porous/);
   assert.match(mobilityAtlas, /Which counties pulled travel in—or pushed it out/);
   assert.match(mobilityAtlas, /not unique individuals/);
   assert.doesNotMatch(mobilityAtlas, /05<\/span> Human mobility|01 \/ Interstate network|02 \/ County hubs/);
-  assert.equal(mobility.meta.coverageStart, "2020-03-12");
-  assert.equal(mobility.meta.coverageEnd, "2020-07-19");
-  assert.equal(mobility.meta.validRowCount, 4_051_110);
+  assert.equal(mobility.meta.coverageStart, "2019-01-07");
+  assert.equal(mobility.meta.coverageEnd, "2022-01-02");
+  assert.equal(mobility.meta.sourceFileCount, 156);
+  assert.equal(mobility.meta.metric, "visitor_flows");
+  assert.equal(mobility.meta.rowCount, 92_042_033);
+  assert.equal(mobility.meta.validRowCount, 90_658_879);
+  assert.equal(mobility.meta.totalObserved, 20_882_085_646);
   assert.equal(mobility.meta.countyCount, 3_135);
   assert.equal(mobility.meta.stateCount, 51);
   assert.equal(mobility.statePairs.length, 1_275);
   assert.equal(mobility.counties.length, 3_135);
   assert.equal(mobility.quality.malformedRows, 0);
   assert.equal(mobility.quality.negativeValueRows, 0);
+  assert.equal(mobility.quality.duplicatePairsWithinSourceFile, 0);
+  assert.equal(mobility.quality.dateRangeConflicts, 0);
+  assert.equal(mobility.quality.sourceWeekGaps, 0);
   assert.equal(mobility.quality.duplicatePairsWithinOrigin, 0);
   assert.equal(mobility.quality.originBlockReentries, 0);
   assert.equal(mobility.quality.countyLabelConflicts, 0);
@@ -115,5 +124,6 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   await assert.rejects(access(new URL("../app/_sites-preview/SkeletonPreview.tsx", import.meta.url)));
   await access(new URL("../public/favicon.png", import.meta.url));
   await access(new URL("../analysis/kang_mobility_data_quality.ipynb", import.meta.url));
+  await access(new URL("../analysis/prepare_kang_mobility_all.R", import.meta.url));
   await access(new URL("../dist/server/index.js", import.meta.url));
 });

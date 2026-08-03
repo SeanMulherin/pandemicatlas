@@ -1220,8 +1220,9 @@ export function CovidAtlas() {
             <div className="methodology-secondary-source">
               <h4>Kang county traveler totals</h4>
               <p>
-                Kang’s official daily county archive runs from January 1, 2019 through April 15,
-                2021. The mobility figures use the supplied March 12—July 19, 2020 aggregate;
+                The mobility figures aggregate all 156 official weekly county files, covering
+                January 7, 2019 through January 2, 2022 for the 50 states and D.C. Kang’s daily
+                county release ends April 15, 2021, while the weekly release continues beyond it;
                 observations are cumulative movements, not unique individuals.
               </p>
             </div>
@@ -1255,7 +1256,7 @@ export function CovidAtlas() {
           </article>
         </div>
         <div className="source-strip">
-          <p>Data: The New York Times · Jan. 21, 2020—Mar. 23, 2023 · Kang mobility · Mar. 12—Jul. 19, 2020</p>
+          <p>Data: The New York Times · Jan. 21, 2020—Mar. 23, 2023 · Kang weekly mobility · Jan. 7, 2019—Jan. 2, 2022</p>
           <a href="https://github.com/nytimes/covid-19-data" target="_blank" rel="noreferrer">
             Repository & methodology <span aria-hidden="true">↗</span>
           </a>

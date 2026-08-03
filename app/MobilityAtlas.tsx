@@ -11,10 +11,13 @@ import {
 
 interface MobilityMeta {
   source: string;
+  sourceRepository: string;
+  sourceFileCount: number;
   coverageStart: string;
   coverageEnd: string;
   grain: string;
   unit: string;
+  metric: string;
   rowCount: number;
   validRowCount: number;
   countyCount: number;
@@ -29,6 +32,10 @@ interface MobilityQuality {
   malformedRows: number;
   negativeValueRows: number;
   zeroValueRows: number;
+  excludedNonAtlasRows: number;
+  duplicatePairsWithinSourceFile: number;
+  dateRangeConflicts: number;
+  sourceWeekGaps: number;
   duplicatePairsWithinOrigin: number;
   originBlockReentries: number;
   countyLabelConflicts: number;
@@ -620,7 +627,7 @@ export default function MobilityAtlas() {
         <div className="section-heading mobility-section-heading">
           <div className="section-heading-copy">
             <h2>Human Mobility Patterns</h2>
-            <p>{error || "Preparing 4 million county-to-county mobility records…"}</p>
+            <p>{error || "Preparing 90 million county-to-county mobility records…"}</p>
           </div>
         </div>
       </section>
@@ -631,6 +638,9 @@ export default function MobilityAtlas() {
   const cleanChecks =
     data.quality.malformedRows
     + data.quality.negativeValueRows
+    + data.quality.duplicatePairsWithinSourceFile
+    + data.quality.dateRangeConflicts
+    + data.quality.sourceWeekGaps
     + data.quality.duplicatePairsWithinOrigin
     + data.quality.originBlockReentries
     + data.quality.countyLabelConflicts;
@@ -721,13 +731,15 @@ export default function MobilityAtlas() {
       <div className="mobility-source-note">
         <p>
           *These figures use detected visitor flows rather than population-inferred estimates.
-          Counts are cumulative movement observations, not unique individuals. The supplied
-          file has no daily field, so both figures summarize its full period.
+          Counts are cumulative movement observations, not unique individuals. Both figures
+          aggregate all {formatInteger(data.meta.sourceFileCount)} published weekly county files.
         </p>
         <p>
-          The official Kang daily county archive spans Jan. 1, 2019—Apr. 15, 2021; it does not
-          reach Mar. 2023. This atlas uses the supplied Mar. 12—Jul. 19, 2020 aggregate ·
-          {" "}{formatInteger(data.meta.validRowCount)} valid origin-destination records ·
+          Kang’s daily county release ends Apr. 15, 2021, but its weekly county release continues
+          through Jan. 2, 2022. This atlas uses the complete weekly archive for the 50 states and
+          D.C. · {formatInteger(data.meta.validRowCount)} valid origin-destination records ·
+          {" "}{formatInteger(data.quality.excludedNonAtlasRows)} records involving other U.S.
+          jurisdictions excluded ·
           {" "}{cleanChecks === 0 ? "No structural issues found" : `${cleanChecks} structural issues flagged`}
         </p>
       </div>

@@ -1,8 +1,9 @@
-"""Profile and aggregate the Kang county traveler origin-destination matrix.
+"""Profile the legacy March-July 2020 Kang traveler extract.
 
 The raw file is streamed so the 247 MB uncompressed CSV never has to be loaded
-fully into memory. The published JSON contains only state flows and county-level
-inbound/outbound summaries needed by the interactive figures.
+fully into memory. The live atlas is built from all 156 official weekly files by
+``prepare_kang_mobility_all.R``; this module remains for auditing the original
+user-supplied extract.
 """
 
 from __future__ import annotations
@@ -222,7 +223,7 @@ def profile_and_aggregate(
 
 
 if __name__ == "__main__":
-    target = Path(__file__).resolve().parents[1] / "public/data/mobility.json"
+    target = Path(__file__).resolve().parents[1] / "public/data/mobility_legacy_2020.json"
     profile = profile_and_aggregate(DEFAULT_SOURCE, target)
     print(json.dumps({"meta": profile["meta"], "quality": profile["quality"]}, indent=2))
     print(f"Wrote {target}")
