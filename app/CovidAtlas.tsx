@@ -1115,7 +1115,7 @@ export function CovidAtlas() {
         <div className="ranking-panel">
           <div className="ranking-heading">
             <div>
-              <h2>Statewide Ranks</h2>
+              <h2>Statewide Rankings</h2>
             </div>
             <time dateTime={selectedDate}>{formatFullDate(selectedDate)}</time>
           </div>

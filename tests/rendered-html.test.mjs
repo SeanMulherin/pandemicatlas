@@ -68,7 +68,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /Select the states you wish to highlight for evaluation/);
   assert.match(atlas, /Choose up to ten state tiles/);
   assert.match(atlas, /MAX_SELECTED_STATES = 10/);
-  assert.match(atlas, /Statewide Ranks/);
+  assert.match(atlas, /Statewide Rankings/);
   assert.match(atlas, /<MobilityAtlas \/>/);
   assert.doesNotMatch(atlas, /Burden ranks states by the active metric and view/);
   assert.match(atlas, /className="floating-playback"/);
