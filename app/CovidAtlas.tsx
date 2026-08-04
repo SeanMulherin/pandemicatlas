@@ -684,6 +684,7 @@ export function CovidAtlas() {
   ]);
   const [selectionMessage, setSelectionMessage] = useState("");
   const [showFloatingPlayback, setShowFloatingPlayback] = useState(false);
+  const [floatingTimelineTop, setFloatingTimelineTop] = useState(176);
   const timeConsoleRef = useRef<HTMLDivElement>(null);
   const comparisonSectionRef = useRef<HTMLElement>(null);
 
@@ -782,8 +783,12 @@ export function CovidAtlas() {
           .querySelector<HTMLElement>(".explorer-controls")
           ?.getBoundingClientRect().bottom ?? 0;
         const visibilityThreshold = Math.max(16, controlsBottom + 8);
+        const roundedThreshold = Math.round(visibilityThreshold);
+        setFloatingTimelineTop((current) =>
+          current === roundedThreshold ? current : roundedThreshold,
+        );
         const consoleHasScrolledAway =
-          timeConsole.getBoundingClientRect().bottom <= visibilityThreshold;
+          timeConsole.getBoundingClientRect().top < visibilityThreshold - 1;
         const dynamicViewsRemainVisible =
           comparisonSection.getBoundingClientRect().bottom > visibilityThreshold;
         setShowFloatingPlayback(consoleHasScrolledAway && dynamicViewsRemainVisible);
@@ -991,7 +996,11 @@ export function CovidAtlas() {
           Select the states you wish to highlight for evaluation. Choose up to ten state tiles;
           your selection carries into the incidence comparison and burden ranking below.
         </p>
-        <div className="time-console" ref={timeConsoleRef}>
+        <div
+          className="time-console"
+          ref={timeConsoleRef}
+          style={{ "--timeline-sticky-top": `${floatingTimelineTop}px` } as CSSProperties}
+        >
           <button
             type="button"
             className="play-button"
@@ -1001,11 +1010,12 @@ export function CovidAtlas() {
             <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
             {isPlaying ? "Pause" : "Play"}
           </button>
-          <div className="date-readout" aria-live="polite">
+          <div className="date-readout" aria-live={isPlaying ? "off" : "polite"}>
             <span>Viewing</span>
             <strong>{formatFullDate(selectedDate)}</strong>
           </div>
           <div className="date-slider-wrap">
+            <span>{activeDates[0] ? formatShortDate(activeDates[0]) : ""}</span>
             <input
               type="range"
               min={0}
@@ -1013,12 +1023,10 @@ export function CovidAtlas() {
               value={selectedIndex}
               onChange={(event) => changeCursor(Number(event.target.value))}
               aria-label="Archive date"
+              aria-orientation="vertical"
               aria-valuetext={formatFullDate(selectedDate)}
             />
-            <div aria-hidden="true">
-              <span>{activeDates[0] ? formatShortDate(activeDates[0]) : ""}</span>
-              <span>{activeDates.at(-1) ? formatShortDate(activeDates.at(-1) as string) : ""}</span>
-            </div>
+            <span>{activeDates.at(-1) ? formatShortDate(activeDates.at(-1) as string) : ""}</span>
           </div>
         </div>
 
@@ -1164,7 +1172,12 @@ export function CovidAtlas() {
       </section>
 
       {showFloatingPlayback ? (
-        <div className="floating-playback" role="group" aria-label="Date animation controls">
+        <div
+          className="floating-playback"
+          role="group"
+          aria-label="Date animation controls"
+          style={{ "--timeline-sticky-top": `${floatingTimelineTop}px` } as CSSProperties}
+        >
           <button
             type="button"
             onClick={togglePlayback}
@@ -1173,9 +1186,23 @@ export function CovidAtlas() {
             <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
             {isPlaying ? "Pause" : "Play"}
           </button>
-          <div aria-live="polite">
+          <div className="floating-date-readout" aria-live={isPlaying ? "off" : "polite"}>
             <span>Viewing</span>
             <strong>{formatShortDate(selectedDate)}</strong>
+          </div>
+          <div className="date-slider-wrap floating-date-slider">
+            <span>{activeDates[0] ? formatShortDate(activeDates[0]) : ""}</span>
+            <input
+              type="range"
+              min={0}
+              max={Math.max(0, activeDates.length - 1)}
+              value={selectedIndex}
+              onChange={(event) => changeCursor(Number(event.target.value))}
+              aria-label="Archive date"
+              aria-orientation="vertical"
+              aria-valuetext={formatFullDate(selectedDate)}
+            />
+            <span>{activeDates.at(-1) ? formatShortDate(activeDates.at(-1) as string) : ""}</span>
           </div>
         </div>
       ) : null}

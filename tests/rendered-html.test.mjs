@@ -48,6 +48,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     page,
     layout,
     atlas,
+    styles,
     countyMap,
     mobilityAtlas,
     countyBuild,
@@ -62,6 +63,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/CovidAtlas.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/CountyIncidenceMap.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/MobilityAtlas.tsx", import.meta.url), "utf8"),
     readFile(new URL("../analysis/prepare_county_incidence.mjs", import.meta.url), "utf8"),
@@ -93,6 +95,16 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.doesNotMatch(atlas, /Burden ranks states by the active metric and view/);
   assert.match(atlas, /className="floating-playback"/);
   assert.match(atlas, /ref=\{timeConsoleRef\}/);
+  assert.equal(atlas.match(/aria-orientation="vertical"/g)?.length, 2);
+  assert.match(atlas, /className="date-slider-wrap floating-date-slider"/);
+  assert.equal(
+    atlas.match(/onChange=\{\(event\) => changeCursor\(Number\(event\.target\.value\)\)\}/g)?.length,
+    2,
+  );
+  assert.match(styles, /\.time-console \{[\s\S]*?position: sticky;/);
+  assert.match(styles, /\.floating-playback \{[\s\S]*?position: fixed;/);
+  assert.match(styles, /writing-mode: vertical-lr;/);
+  assert.match(styles, /cursor: ns-resize;/);
   assert.ok(
     atlas.indexOf('<h2 className="states-title">Statewide Incidence</h2>')
       < atlas.indexOf('<h2 className="analysis-title">Statewide Waves</h2>'),
