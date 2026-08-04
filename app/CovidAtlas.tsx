@@ -1115,12 +1115,7 @@ export function CovidAtlas() {
         <div className="ranking-panel">
           <div className="ranking-heading">
             <div>
-              <h2>Statewide Burden</h2>
-              <p>
-                Burden ranks states by the active metric and view on the selected date. “7-day
-                average” uses the average daily number of reported cases or deaths; “Per 100k”
-                uses that same seven-day average per 100,000 residents.
-              </p>
+              <h2>Statewide Ranks</h2>
             </div>
             <time dateTime={selectedDate}>{formatFullDate(selectedDate)}</time>
           </div>

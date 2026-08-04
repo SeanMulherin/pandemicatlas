@@ -68,10 +68,9 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /Select the states you wish to highlight for evaluation/);
   assert.match(atlas, /Choose up to ten state tiles/);
   assert.match(atlas, /MAX_SELECTED_STATES = 10/);
-  assert.match(atlas, /Statewide Burden/);
+  assert.match(atlas, /Statewide Ranks/);
   assert.match(atlas, /<MobilityAtlas \/>/);
-  assert.match(atlas, /Burden ranks states by the active metric and view/);
-  assert.match(atlas, /seven-day average per 100,000 residents/);
+  assert.doesNotMatch(atlas, /Burden ranks states by the active metric and view/);
   assert.match(atlas, /className="floating-playback"/);
   assert.match(atlas, /ref=\{timeConsoleRef\}/);
   assert.ok(
@@ -98,8 +97,9 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   );
   assert.doesNotMatch(atlas, /id="fingerprints"|MiniWaveCanvas|fingerprintSeries/);
   assert.match(mobilityAtlas, /Human Mobility Patterns/);
-  assert.match(mobilityAtlas, /roughly 10%/);
-  assert.match(mobilityAtlas, /includes travel across transportation modes/);
+  assert.match(mobilityAtlas, /We define human mobility/);
+  assert.match(mobilityAtlas, /all modes of/);
+  assert.match(mobilityAtlas, /Data represent ~10%/);
   assert.match(mobilityAtlas, /daily county release ends Apr\. 15, 2021/);
   assert.match(mobilityAtlas, /weekly county release continues/);
   assert.match(mobilityAtlas, /Where state borders were most porous/);

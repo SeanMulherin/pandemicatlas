@@ -651,10 +651,9 @@ export default function MobilityAtlas() {
         <div className="section-heading-copy">
           <h2>Human Mobility Patterns</h2>
           <p>
-            Human mobility here means origin-to-destination movement inferred from anonymous
-            cellphone-location visits. The underlying SafeGraph sample represents roughly 10%
-            of the U.S. population and includes travel across transportation modes, although it
-            does not identify the mode used.
+            We define human mobility to mean the origin-to-destination movement inferred from
+            anonymous cellphone-location visits, thereby accounting for all modes of
+            transportation. Data represent ~10% of the U.S. population.
           </p>
         </div>
       </div>
