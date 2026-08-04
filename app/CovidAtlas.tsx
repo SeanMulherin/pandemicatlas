@@ -11,6 +11,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import MobilityAtlas from "./MobilityAtlas";
+import CountyIncidenceMap from "./CountyIncidenceMap";
 
 type Metric = "cases" | "deaths";
 type Scale = "average" | "perCapita";
@@ -1110,7 +1111,6 @@ export function CovidAtlas() {
       <section
         className="atlas-section comparison-section"
         id="compare"
-        ref={comparisonSectionRef}
       >
         <div className="ranking-panel">
           <div className="ranking-heading">
@@ -1150,6 +1150,19 @@ export function CovidAtlas() {
         </div>
       </section>
 
+      <section
+        className="atlas-section county-incidence-section"
+        id="county-incidence"
+        ref={comparisonSectionRef}
+      >
+        <CountyIncidenceMap
+          selectedDate={selectedDate}
+          metric={metric}
+          scale={scale}
+          isPlaying={isPlaying}
+        />
+      </section>
+
       {showFloatingPlayback ? (
         <div className="floating-playback" role="group" aria-label="Date animation controls">
           <button
@@ -1175,8 +1188,8 @@ export function CovidAtlas() {
             <span>01 / Sources</span>
             <h3>The New York Times archive</h3>
             <p>
-              This explorer reads local snapshots of the Times’s public U.S. and state data.
-              The archive ends March 23, 2023, when its recurring collection ended.
+              This explorer reads local snapshots of the Times’s public U.S., state, and county
+              data. The archive ends March 23, 2023, when its recurring collection ended.
             </p>
             <div className="methodology-secondary-source">
               <h4>Kang county traveler totals</h4>
@@ -1221,6 +1234,9 @@ export function CovidAtlas() {
           <div className="source-links">
             <a href="https://github.com/nytimes/covid-19-data" target="_blank" rel="noreferrer">
               NYT repository <span aria-hidden="true">↗</span>
+            </a>
+            <a href="https://github.com/topojson/us-atlas" target="_blank" rel="noreferrer">
+              County geometry <span aria-hidden="true">↗</span>
             </a>
             <a
               href="https://github.com/GeoDS/COVID19USFlows-WeeklyFlows"

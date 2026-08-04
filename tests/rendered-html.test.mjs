@@ -37,18 +37,37 @@ test("server-renders the finished Pandemic Atlas shell", async () => {
 });
 
 test("ships the complete local archive and bespoke preview assets", async () => {
-  const [national, states, mobilityRaw, socialCard, packageJson, page, layout, atlas, mobilityAtlas] = await Promise.all([
+  const [
+    national,
+    states,
+    mobilityRaw,
+    countyMetadataRaw,
+    countyValues,
+    socialCard,
+    packageJson,
+    page,
+    layout,
+    atlas,
+    countyMap,
+    mobilityAtlas,
+    countyBuild,
+  ] = await Promise.all([
     readFile(new URL("../public/data/us.csv", import.meta.url), "utf8"),
     readFile(new URL("../public/data/us-states.csv", import.meta.url), "utf8"),
     readFile(new URL("../public/data/mobility.json", import.meta.url), "utf8"),
+    readFile(new URL("../public/data/county-incidence-map.json", import.meta.url), "utf8"),
+    readFile(new URL("../public/data/county-incidence.bin", import.meta.url)),
     readFile(new URL("../public/og.png", import.meta.url)),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/CovidAtlas.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/CountyIncidenceMap.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/MobilityAtlas.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../analysis/prepare_county_incidence.mjs", import.meta.url), "utf8"),
   ]);
   const mobility = JSON.parse(mobilityRaw);
+  const countyMetadata = JSON.parse(countyMetadataRaw);
 
   assert.match(national, /^date,geoid,cases,cases_avg,cases_avg_per_100k/);
   assert.match(states, /^date,geoid,state,cases,cases_avg,cases_avg_per_100k/);
@@ -69,6 +88,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /Choose up to ten state tiles/);
   assert.match(atlas, /MAX_SELECTED_STATES = 10/);
   assert.match(atlas, /Statewide Rankings/);
+  assert.match(atlas, /<CountyIncidenceMap/);
   assert.match(atlas, /<MobilityAtlas \/>/);
   assert.doesNotMatch(atlas, /Burden ranks states by the active metric and view/);
   assert.match(atlas, /className="floating-playback"/);
@@ -85,8 +105,10 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /NYT repository/);
   assert.match(atlas, /Kang repository/);
   assert.match(atlas, /Kang methodology/);
+  assert.match(atlas, /County geometry/);
   assert.match(atlas, /https:\/\/github\.com\/GeoDS\/COVID19USFlows-WeeklyFlows/);
   assert.match(atlas, /https:\/\/doi\.org\/10\.1038\/s41597-020-00734-5/);
+  assert.match(atlas, /https:\/\/github\.com\/topojson\/us-atlas/);
   assert.doesNotMatch(
     atlas,
     /Dynamic Statewide Incidence|Dynamic Temporal View Grouped by State|Daily ranking|Where the reported burden was highest/,
@@ -101,6 +123,70 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     /NYT DATA \/ 2020—2023|Every wave left a different silhouette|Watch the wave move|Reading the map|No two outbreaks moved in lockstep|51 wave fingerprints|Before you interpret the lines/,
   );
   assert.doesNotMatch(atlas, /id="fingerprints"|MiniWaveCanvas|fingerprintSeries/);
+  assert.ok(atlas.indexOf("Statewide Rankings") < atlas.indexOf("<CountyIncidenceMap"));
+  assert.ok(atlas.indexOf("<CountyIncidenceMap") < atlas.indexOf("<MobilityAtlas />"));
+  assert.match(countyMap, /Countywide Incidence/);
+  assert.match(countyMap, /Darker blue indicates higher incidence/);
+  assert.match(countyMap, /county-incidence-map\.json/);
+  assert.match(countyMap, /county-incidence\.bin/);
+  assert.match(countyMap, /selectedDate/);
+  assert.match(countyMap, /maximumEncodedValue/);
+  assert.match(countyMap, /No report/);
+  assert.match(countyMap, /highestValue > 0 \? highestIndex : null/);
+  assert.match(countyMap, /!isPlaying && selectedCounty !== null/);
+  assert.match(countyBuild, /CAP_QUANTILE = 0\.995/);
+  assert.match(countyBuild, /SPECIAL_REPORTING_AREAS/);
+  assert.match(countyBuild, /Internal reporting gap/);
+  assert.equal(countyMetadata.coverageStart, "2020-01-21");
+  assert.equal(countyMetadata.coverageEnd, "2023-03-23");
+  assert.equal(countyMetadata.dayCount, 1_158);
+  assert.equal(countyMetadata.countyCount, 3_142);
+  assert.equal(countyMetadata.geometry.counties.length, 3_142);
+  assert.equal(countyMetadata.fields.length, 4);
+  assert.equal(countyMetadata.quality.countiesWithoutData, 0);
+  assert.equal(countyMetadata.quality.missingSourceValues, 0);
+  assert.ok(countyMetadata.quality.missingEncodedValues > 0);
+  assert.equal(countyValues.byteLength, countyMetadata.binaryBytes);
+  assert.equal(
+    countyValues.byteLength,
+    countyMetadata.binaryHeaderBytes + (1_158 * 3_142 * 4),
+  );
+  assert.equal(
+    countyValues.subarray(0, countyMetadata.binaryHeaderBytes).toString("hex"),
+    countyMetadata.buildId,
+  );
+
+  const countyPayload = countyValues.subarray(countyMetadata.binaryHeaderBytes);
+  const snohomishIndex = countyMetadata.geometry.counties.findIndex(
+    (county) => county.fips === "53061",
+  );
+  const mohaveIndex = countyMetadata.geometry.counties.findIndex(
+    (county) => county.fips === "04015",
+  );
+  const losAngelesIndex = countyMetadata.geometry.counties.findIndex(
+    (county) => county.fips === "06037",
+  );
+  assert.ok(snohomishIndex >= 0 && mohaveIndex >= 0 && losAngelesIndex >= 0);
+  const encodedIndex = (day, county, field) => ((day * 3_142 + county) * 4) + field;
+  const expectedFirstSnohomishCases = Math.max(
+    1,
+    Math.round(
+      (Math.log1p(0.14) / Math.log1p(countyMetadata.fields[0].cap))
+      * countyMetadata.maximumEncodedValue,
+    ),
+  );
+  assert.equal(
+    countyPayload[encodedIndex(0, snohomishIndex, 0)],
+    expectedFirstSnohomishCases,
+  );
+  assert.equal(
+    countyPayload[encodedIndex(0, mohaveIndex, 0)],
+    countyMetadata.missingValue,
+  );
+  assert.notEqual(
+    countyPayload[encodedIndex(1_157, losAngelesIndex, 0)],
+    countyMetadata.missingValue,
+  );
   assert.match(mobilityAtlas, /Human Mobility Patterns/);
   assert.match(mobilityAtlas, /We define human mobility/);
   assert.match(mobilityAtlas, /all modes of/);
@@ -135,5 +221,6 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   await access(new URL("../public/favicon.png", import.meta.url));
   await access(new URL("../analysis/kang_mobility_data_quality.ipynb", import.meta.url));
   await access(new URL("../analysis/prepare_kang_mobility_all.R", import.meta.url));
+  await access(new URL("../analysis/prepare_county_incidence.mjs", import.meta.url));
   await access(new URL("../dist/server/index.js", import.meta.url));
 });

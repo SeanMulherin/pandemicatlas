@@ -1323,6 +1323,237 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+/* County incidence */
+
+.county-incidence-section {
+  background: var(--paper-deep);
+}
+
+.county-incidence-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+  padding-top: 1.2rem;
+  border-top: 5px solid var(--ink);
+}
+
+.county-incidence-heading h2 {
+  max-width: 18ch;
+  margin: 0;
+  font-family: var(--serif);
+  font-size: clamp(2.7rem, 5vw, 4.75rem);
+  font-weight: 400;
+  letter-spacing: -0.05em;
+  line-height: 0.96;
+}
+
+.county-incidence-heading p {
+  max-width: 52rem;
+  margin: 1rem 0 0;
+  color: var(--ink-soft);
+  font-size: clamp(0.88rem, 1.25vw, 1rem);
+  line-height: 1.65;
+}
+
+.county-incidence-heading time {
+  flex: 0 0 auto;
+  padding-bottom: 0.15rem;
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 0.67rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.county-map-frame {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(14rem, 0.82fr);
+  border: 1px solid var(--ink);
+  background: var(--paper-light);
+}
+
+.county-map-visual {
+  min-width: 0;
+  padding: clamp(0.7rem, 1.8vw, 1.35rem);
+  border-right: 1px solid var(--ink);
+}
+
+.county-map-canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1023 / 602;
+  background: var(--paper-light);
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+.county-map-canvas:focus-visible {
+  outline-offset: 4px;
+}
+
+.county-map-legend {
+  display: grid;
+  grid-template-columns: auto minmax(8rem, 1fr) auto auto;
+  gap: 0.6rem;
+  align-items: center;
+  margin-top: 0.8rem;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.county-map-legend > div {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  height: 0.65rem;
+  border: 1px solid rgba(21, 25, 30, 0.4);
+}
+
+.county-map-legend > div i {
+  display: block;
+}
+
+.county-map-missing {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+  margin-left: 0.75rem;
+  white-space: nowrap;
+}
+
+.county-map-missing i {
+  width: 0.65rem;
+  height: 0.65rem;
+  border: 1px solid rgba(21, 25, 30, 0.4);
+  background: #d8d5cc;
+}
+
+.county-map-detail {
+  display: flex;
+  min-width: 0;
+  padding: clamp(1rem, 2.4vw, 2rem);
+  flex-direction: column;
+}
+
+.county-map-detail > span {
+  color: var(--deaths);
+  font-family: var(--mono);
+  font-size: 0.59rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.county-map-detail h3 {
+  margin: 0.65rem 0 0;
+  font-family: var(--serif);
+  font-size: clamp(1.6rem, 3vw, 2.35rem);
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.county-map-detail h3 + p {
+  margin: 0.55rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+}
+
+.county-map-detail > strong {
+  margin-top: 1.8rem;
+  color: var(--cases-dark);
+  font-family: var(--serif);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+}
+
+.county-map-detail > small {
+  max-width: 18rem;
+  margin-top: 0.65rem;
+  color: var(--ink-faint);
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+.county-map-detail > time {
+  margin-top: 1rem;
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 0.61rem;
+  text-transform: uppercase;
+}
+
+.county-reporting-note,
+.county-keyboard-note {
+  color: var(--ink-faint);
+  font-size: 0.64rem;
+  line-height: 1.5;
+}
+
+.county-reporting-note {
+  margin: 1.2rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+}
+
+.county-keyboard-note {
+  margin: auto 0 0;
+  padding-top: 1.2rem;
+}
+
+.county-map-status {
+  display: grid;
+  place-items: center;
+  min-height: clamp(19rem, 40vw, 34rem);
+  border: 1px solid var(--ink);
+  background: var(--paper-light);
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  text-align: center;
+}
+
+.county-map-status > span {
+  width: min(18rem, 70%);
+  height: 2px;
+  background: linear-gradient(90deg, var(--paper-deep), var(--cases), var(--paper-deep));
+  animation: loading-line 1.4s ease-in-out infinite alternate;
+}
+
+.county-map-status.is-error {
+  align-content: center;
+  gap: 1rem;
+}
+
+.county-map-status.is-error p {
+  margin: 0;
+}
+
+.county-map-status.is-error button {
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--ink);
+  color: var(--paper-light);
+  cursor: pointer;
+}
+
+.county-map-source {
+  margin: 1rem 0 0;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  line-height: 1.55;
+}
+
 /* Human mobility */
 
 .mobility-section {
@@ -1976,6 +2207,17 @@ button {
   }
 }
 
+@keyframes loading-line {
+  from {
+    opacity: 0.35;
+    transform: scaleX(0.35);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
 /* Mid-size editorial reflow */
 
 @media (max-width: 68rem) {
@@ -2178,6 +2420,29 @@ button {
     align-items: flex-start;
     flex-direction: column;
     gap: 0.8rem;
+  }
+
+  .county-incidence-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .county-map-frame {
+    grid-template-columns: 1fr;
+  }
+
+  .county-map-visual {
+    border-right: 0;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .county-map-detail {
+    min-height: 17rem;
+  }
+
+  .county-keyboard-note {
+    margin-top: 2rem;
   }
 
   .ranked-bars button {
@@ -2394,6 +2659,15 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .county-map-legend {
+    grid-template-columns: auto minmax(5rem, 1fr) auto;
+  }
+
+  .county-map-missing {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
+
   .comparison-readout > div,
   .comparison-readout > div:nth-child(odd),
   .comparison-readout > div:nth-last-child(-n + 2) {
@@ -2454,6 +2728,7 @@ button {
 
   .rank-bar::before,
   .map-legend i,
+  .county-map-legend i,
   .mobility-chart-key i,
   .archive-status i {
     background: Highlight;
