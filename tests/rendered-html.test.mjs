@@ -70,12 +70,16 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /MAX_SELECTED_STATES = 10/);
   assert.match(atlas, /Statewide Burden/);
   assert.match(atlas, /<MobilityAtlas \/>/);
-  assert.match(atlas, /Burden is each state’s seven-day average/);
+  assert.match(atlas, /Burden ranks states by the active metric and view/);
+  assert.match(atlas, /seven-day average per 100,000 residents/);
+  assert.match(atlas, /className="floating-playback"/);
+  assert.match(atlas, /ref=\{timeConsoleRef\}/);
   assert.ok(
     atlas.indexOf('<h2 className="states-title">Statewide Incidence</h2>')
       < atlas.indexOf('<h2 className="analysis-title">Statewide Waves</h2>'),
   );
   assert.match(atlas, /Kang county traveler totals/);
+  assert.match(atlas, /01 \/ Sources/);
   assert.match(atlas, /all 156 official weekly county files/);
   assert.match(atlas, /January 7, 2019 through January 2, 2022/);
   assert.match(atlas, /cumulative movements, not unique/);
@@ -92,6 +96,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     atlas,
     /NYT DATA \/ 2020—2023|Every wave left a different silhouette|Watch the wave move|Reading the map|No two outbreaks moved in lockstep|51 wave fingerprints|Before you interpret the lines/,
   );
+  assert.doesNotMatch(atlas, /id="fingerprints"|MiniWaveCanvas|fingerprintSeries/);
   assert.match(mobilityAtlas, /Human Mobility Patterns/);
   assert.match(mobilityAtlas, /roughly 10%/);
   assert.match(mobilityAtlas, /includes travel across transportation modes/);

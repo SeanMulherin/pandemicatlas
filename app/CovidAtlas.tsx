@@ -640,55 +640,6 @@ function ComparisonChart({
   );
 }
 
-function MiniWaveCanvas({
-  points,
-  metric,
-  scale,
-  selected,
-}: {
-  points: readonly StateDatum[];
-  metric: Metric;
-  scale: Scale;
-  selected: boolean;
-}) {
-  const values = useMemo(
-    () => points.map((point) => Math.max(0, metricValue(point, metric, scale))),
-    [metric, points, scale],
-  );
-  const draw = useCallback(
-    (context: CanvasRenderingContext2D, width: number, height: number) => {
-      if (values.length === 0) return;
-      const bucketCount = Math.min(64, values.length);
-      const bucketSize = values.length / bucketCount;
-      const sampled = Array.from({ length: bucketCount }, (_, bucket) => {
-        const start = Math.floor(bucket * bucketSize);
-        const end = Math.max(start + 1, Math.floor((bucket + 1) * bucketSize));
-        return Math.max(0, ...values.slice(start, end));
-      });
-      const maximum = Math.max(1, ...sampled);
-      const gap = 1;
-      const barWidth = Math.max(1, width / bucketCount - gap);
-      context.fillStyle = selected
-        ? metric === "cases"
-          ? "#006d77"
-          : "#a9363e"
-        : "rgba(21, 25, 30, 0.48)";
-      sampled.forEach((value, index) => {
-        const barHeight = Math.max(1, (value / maximum) * (height - 3));
-        context.fillRect(
-          (index / bucketCount) * width,
-          height - barHeight,
-          barWidth,
-          barHeight,
-        );
-      });
-    },
-    [metric, selected, values],
-  );
-  const canvasRef = useResponsiveCanvas(draw);
-  return <canvas ref={canvasRef} className="mini-wave-canvas" aria-hidden="true" />;
-}
-
 function LoadingView() {
   return (
     <main className="atlas-state-view" aria-busy="true">
@@ -731,6 +682,9 @@ export function CovidAtlas() {
     "Texas",
   ]);
   const [selectionMessage, setSelectionMessage] = useState("");
+  const [showFloatingPlayback, setShowFloatingPlayback] = useState(false);
+  const timeConsoleRef = useRef<HTMLDivElement>(null);
+  const comparisonSectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -786,6 +740,13 @@ export function CovidAtlas() {
   const currentNational = activeNational[selectedIndex];
   const currentStateRows = data?.statesByDate.get(selectedDate);
 
+  const togglePlayback = useCallback(() => {
+    if (!isPlaying && selectedIndex >= activeDates.length - 1) {
+      setSelectedDate(activeDates[0] ?? selectedDate);
+    }
+    setIsPlaying((playing) => !playing);
+  }, [activeDates, isPlaying, selectedDate, selectedIndex]);
+
   useEffect(() => {
     if (!isPlaying || activeDates.length < 2) return;
     const timer = window.setInterval(() => {
@@ -801,6 +762,42 @@ export function CovidAtlas() {
     }, 110);
     return () => window.clearInterval(timer);
   }, [activeDates, isPlaying]);
+
+  useEffect(() => {
+    if (!data) return;
+    let animationFrame = 0;
+
+    const updateFloatingPlayback = () => {
+      window.cancelAnimationFrame(animationFrame);
+      animationFrame = window.requestAnimationFrame(() => {
+        const timeConsole = timeConsoleRef.current;
+        const comparisonSection = comparisonSectionRef.current;
+        if (!timeConsole || !comparisonSection) {
+          setShowFloatingPlayback(false);
+          return;
+        }
+
+        const controlsBottom = document
+          .querySelector<HTMLElement>(".explorer-controls")
+          ?.getBoundingClientRect().bottom ?? 0;
+        const visibilityThreshold = Math.max(16, controlsBottom + 8);
+        const consoleHasScrolledAway =
+          timeConsole.getBoundingClientRect().bottom <= visibilityThreshold;
+        const dynamicViewsRemainVisible =
+          comparisonSection.getBoundingClientRect().bottom > visibilityThreshold;
+        setShowFloatingPlayback(consoleHasScrolledAway && dynamicViewsRemainVisible);
+      });
+    };
+
+    updateFloatingPlayback();
+    window.addEventListener("scroll", updateFloatingPlayback, { passive: true });
+    window.addEventListener("resize", updateFloatingPlayback);
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener("scroll", updateFloatingPlayback);
+      window.removeEventListener("resize", updateFloatingPlayback);
+    };
+  }, [data]);
 
   const archiveTotals = useMemo(() => {
     if (!data) return { cases: 0, deaths: 0 };
@@ -839,21 +836,6 @@ export function CovidAtlas() {
       };
     });
   }, [activeDates, data, metric, scale, selectedStates]);
-
-  const fingerprintSeries = useMemo(() => {
-    const result = new Map<string, StateDatum[]>();
-    if (!data) return result;
-    for (const tile of STATE_TILES) {
-      const rows = data.stateSeries.get(tile.name) ?? [];
-      result.set(
-        tile.name,
-        rows.filter(
-          (row) => row.date >= activePeriod.start && row.date <= activePeriod.end,
-        ),
-      );
-    }
-    return result;
-  }, [activePeriod.end, activePeriod.start, data]);
 
   const toggleState = useCallback(
     (state: string) => {
@@ -1008,16 +990,11 @@ export function CovidAtlas() {
           Select the states you wish to highlight for evaluation. Choose up to ten state tiles;
           your selection carries into the incidence comparison and burden ranking below.
         </p>
-        <div className="time-console">
+        <div className="time-console" ref={timeConsoleRef}>
           <button
             type="button"
             className="play-button"
-            onClick={() => {
-              if (!isPlaying && selectedIndex >= activeDates.length - 1) {
-                setSelectedDate(activeDates[0] ?? selectedDate);
-              }
-              setIsPlaying((playing) => !playing);
-            }}
+            onClick={togglePlayback}
             aria-label={isPlaying ? "Pause date animation" : "Play date animation"}
           >
             <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
@@ -1130,14 +1107,19 @@ export function CovidAtlas() {
         </div>
       </section>
 
-      <section className="atlas-section comparison-section" id="compare">
+      <section
+        className="atlas-section comparison-section"
+        id="compare"
+        ref={comparisonSectionRef}
+      >
         <div className="ranking-panel">
           <div className="ranking-heading">
             <div>
               <h2>Statewide Burden</h2>
               <p>
-                Burden is each state’s seven-day average of reported cases or deaths on the
-                selected date; “Per 100k” adjusts the comparison for population.
+                Burden ranks states by the active metric and view on the selected date. “7-day
+                average” uses the average daily number of reported cases or deaths; “Per 100k”
+                uses that same seven-day average per 100,000 residents.
               </p>
             </div>
             <time dateTime={selectedDate}>{formatFullDate(selectedDate)}</time>
@@ -1173,45 +1155,29 @@ export function CovidAtlas() {
         </div>
       </section>
 
-      <section className="atlas-section fingerprints-section" id="fingerprints">
-        <div className="fingerprint-grid">
-          {[...STATE_TILES]
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((tile) => {
-              const rows = fingerprintSeries.get(tile.name) ?? [];
-              const current = metricValue(currentStateRows?.get(tile.name), metric, scale);
-              const peak = rows.reduce(
-                (highest, row) => Math.max(highest, metricValue(row, metric, scale)),
-                0,
-              );
-              const isSelected = selectedStates.includes(tile.name);
-              return (
-                <button
-                  type="button"
-                  className={`fingerprint-card${isSelected ? " is-selected" : ""}`}
-                  key={tile.name}
-                  onClick={() => toggleState(tile.name)}
-                  aria-pressed={isSelected}
-                  aria-label={`${tile.name}: ${formatValue(current, scale)} on ${formatFullDate(selectedDate)}, period peak ${formatValue(peak, scale)}. ${isSelected ? "Remove from" : "Add to"} comparison.`}
-                >
-                  <span className="fingerprint-title"><strong>{tile.abbr}</strong>{tile.name}</span>
-                  <MiniWaveCanvas points={rows} metric={metric} scale={scale} selected={isSelected} />
-                  <span className="fingerprint-meta">
-                    <span>Now <b>{formatValue(current, scale, true)}</b></span>
-                    <span>Peak <b>{formatValue(peak, scale, true)}</b></span>
-                  </span>
-                </button>
-              );
-            })}
+      {showFloatingPlayback ? (
+        <div className="floating-playback" role="group" aria-label="Date animation controls">
+          <button
+            type="button"
+            onClick={togglePlayback}
+            aria-label={isPlaying ? "Pause date animation" : "Play date animation"}
+          >
+            <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
+            {isPlaying ? "Pause" : "Play"}
+          </button>
+          <div aria-live="polite">
+            <span>Viewing</span>
+            <strong>{formatShortDate(selectedDate)}</strong>
+          </div>
         </div>
-      </section>
+      ) : null}
 
       <MobilityAtlas />
 
       <section className="methodology-section" id="methodology">
         <div className="methodology-grid">
           <article>
-            <span>01 / Source</span>
+            <span>01 / Sources</span>
             <h3>The New York Times archive</h3>
             <p>
               This explorer reads local snapshots of the Times’s public U.S. and state data.
