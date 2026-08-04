@@ -82,6 +82,11 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /all 156 official weekly county files/);
   assert.match(atlas, /January 7, 2019 through January 2, 2022/);
   assert.match(atlas, /cumulative movements, not unique/);
+  assert.match(atlas, /NYT repository/);
+  assert.match(atlas, /Kang repository/);
+  assert.match(atlas, /Kang methodology/);
+  assert.match(atlas, /https:\/\/github\.com\/GeoDS\/COVID19USFlows-WeeklyFlows/);
+  assert.match(atlas, /https:\/\/doi\.org\/10\.1038\/s41597-020-00734-5/);
   assert.doesNotMatch(
     atlas,
     /Dynamic Statewide Incidence|Dynamic Temporal View Grouped by State|Daily ranking|Where the reported burden was highest/,

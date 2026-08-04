@@ -1218,9 +1218,25 @@ export function CovidAtlas() {
         </div>
         <div className="source-strip">
           <p>Data: The New York Times · Jan. 21, 2020—Mar. 23, 2023 · Kang weekly mobility · Jan. 7, 2019—Jan. 2, 2022</p>
-          <a href="https://github.com/nytimes/covid-19-data" target="_blank" rel="noreferrer">
-            Repository & methodology <span aria-hidden="true">↗</span>
-          </a>
+          <div className="source-links">
+            <a href="https://github.com/nytimes/covid-19-data" target="_blank" rel="noreferrer">
+              NYT repository <span aria-hidden="true">↗</span>
+            </a>
+            <a
+              href="https://github.com/GeoDS/COVID19USFlows-WeeklyFlows"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Kang repository <span aria-hidden="true">↗</span>
+            </a>
+            <a
+              href="https://doi.org/10.1038/s41597-020-00734-5"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Kang methodology <span aria-hidden="true">↗</span>
+            </a>
+          </div>
         </div>
       </section>
 

@@ -1820,6 +1820,13 @@ button {
   text-transform: uppercase;
 }
 
+.source-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.65rem 1.25rem;
+}
+
 .source-strip p {
   color: var(--ink-soft);
 }
@@ -2273,6 +2280,10 @@ button {
 
   .source-strip {
     display: flex;
+  }
+
+  .source-links {
+    justify-content: flex-start;
   }
 
   .atlas-footer {
