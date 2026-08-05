@@ -720,11 +720,6 @@ export function CovidAtlas() {
   const [floatingTimelineTop, setFloatingTimelineTop] = useState(176);
   const timeConsoleRef = useRef<HTMLDivElement>(null);
   const comparisonSectionRef = useRef<HTMLElement>(null);
-  const staticPlayButtonRef = useRef<HTMLButtonElement>(null);
-  const staticDateSliderRef = useRef<HTMLInputElement>(null);
-  const floatingPlayButtonRef = useRef<HTMLButtonElement>(null);
-  const floatingDateSliderRef = useRef<HTMLInputElement>(null);
-  const pendingHandoffFocusRef = useRef<"play" | "slider" | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -810,9 +805,9 @@ export function CovidAtlas() {
     const updateFloatingPlayback = () => {
       window.cancelAnimationFrame(animationFrame);
       animationFrame = window.requestAnimationFrame(() => {
-        const timeConsole = timeConsoleRef.current;
+        const timeConsoleSlot = timeConsoleRef.current;
         const comparisonSection = comparisonSectionRef.current;
-        if (!timeConsole || !comparisonSection) {
+        if (!timeConsoleSlot || !comparisonSection) {
           setShowFloatingPlayback(false);
           return;
         }
@@ -826,19 +821,10 @@ export function CovidAtlas() {
           current === roundedThreshold ? current : roundedThreshold,
         );
         const consoleHasScrolledAway =
-          timeConsole.getBoundingClientRect().top < visibilityThreshold - 1;
+          timeConsoleSlot.getBoundingClientRect().top < visibilityThreshold - 1;
         const dynamicViewsRemainVisible =
           comparisonSection.getBoundingClientRect().bottom > visibilityThreshold;
-        const shouldShowFloatingPlayback =
-          consoleHasScrolledAway && dynamicViewsRemainVisible;
-        if (shouldShowFloatingPlayback) {
-          if (document.activeElement === staticPlayButtonRef.current) {
-            pendingHandoffFocusRef.current = "play";
-          } else if (document.activeElement === staticDateSliderRef.current) {
-            pendingHandoffFocusRef.current = "slider";
-          }
-        }
-        setShowFloatingPlayback(shouldShowFloatingPlayback);
+        setShowFloatingPlayback(consoleHasScrolledAway && dynamicViewsRemainVisible);
       });
     };
 
@@ -851,17 +837,6 @@ export function CovidAtlas() {
       window.removeEventListener("resize", updateFloatingPlayback);
     };
   }, [data]);
-
-  useEffect(() => {
-    if (!showFloatingPlayback) return;
-    const focusTarget = pendingHandoffFocusRef.current;
-    if (focusTarget === "play") {
-      floatingPlayButtonRef.current?.focus({ preventScroll: true });
-    } else if (focusTarget === "slider") {
-      floatingDateSliderRef.current?.focus({ preventScroll: true });
-    }
-    pendingHandoffFocusRef.current = null;
-  }, [showFloatingPlayback]);
 
   const archiveTotals = useMemo(() => {
     if (!data) return { cases: 0, deaths: 0 };
@@ -1034,38 +1009,46 @@ export function CovidAtlas() {
           your selection carries into the incidence comparison and burden ranking below.
         </p>
         <div
-          className={`time-console${showFloatingPlayback ? " is-handoff-hidden" : ""}`}
+          className="time-console-slot"
           ref={timeConsoleRef}
           style={{ "--timeline-sticky-top": `${floatingTimelineTop}px` } as CSSProperties}
         >
-          <button
-            type="button"
-            className="play-button"
-            ref={staticPlayButtonRef}
-            onClick={togglePlayback}
-            aria-label={isPlaying ? "Pause date animation" : "Play date animation"}
+          <div
+            className={`time-console${showFloatingPlayback ? " is-floating" : ""}`}
+            role="group"
+            aria-label="Date animation controls"
           >
-            <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
-            {isPlaying ? "Pause" : "Play"}
-          </button>
-          <div className="date-readout" aria-live={isPlaying ? "off" : "polite"}>
-            <span>Viewing</span>
-            <strong>{formatFullDate(selectedDate)}</strong>
-          </div>
-          <div className="date-slider-wrap">
-            <span>{activeDates[0] ? formatShortDate(activeDates[0]) : ""}</span>
-            <input
-              type="range"
-              ref={staticDateSliderRef}
-              min={0}
-              max={Math.max(0, activeDates.length - 1)}
-              value={selectedIndex}
-              onChange={(event) => changeCursor(Number(event.target.value))}
-              aria-label="Archive date"
-              aria-orientation="vertical"
-              aria-valuetext={formatFullDate(selectedDate)}
-            />
-            <span>{activeDates.at(-1) ? formatShortDate(activeDates.at(-1) as string) : ""}</span>
+            <button
+              type="button"
+              className="play-button"
+              onClick={togglePlayback}
+              aria-label={isPlaying ? "Pause date animation" : "Play date animation"}
+            >
+              <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
+              {isPlaying ? "Pause" : "Play"}
+            </button>
+            <div className="date-readout" aria-live={isPlaying ? "off" : "polite"}>
+              <span>Viewing</span>
+              <strong>
+                {showFloatingPlayback
+                  ? formatShortDate(selectedDate)
+                  : formatFullDate(selectedDate)}
+              </strong>
+            </div>
+            <div className="date-slider-wrap">
+              <span>{activeDates[0] ? formatShortDate(activeDates[0]) : ""}</span>
+              <input
+                type="range"
+                min={0}
+                max={Math.max(0, activeDates.length - 1)}
+                value={selectedIndex}
+                onChange={(event) => changeCursor(Number(event.target.value))}
+                aria-label="Archive date"
+                aria-orientation="vertical"
+                aria-valuetext={formatFullDate(selectedDate)}
+              />
+              <span>{activeDates.at(-1) ? formatShortDate(activeDates.at(-1) as string) : ""}</span>
+            </div>
           </div>
         </div>
 
@@ -1209,44 +1192,6 @@ export function CovidAtlas() {
           isPlaying={isPlaying}
         />
       </section>
-
-      {showFloatingPlayback ? (
-        <div
-          className="floating-playback"
-          role="group"
-          aria-label="Date animation controls"
-          style={{ "--timeline-sticky-top": `${floatingTimelineTop}px` } as CSSProperties}
-        >
-          <button
-            type="button"
-            ref={floatingPlayButtonRef}
-            onClick={togglePlayback}
-            aria-label={isPlaying ? "Pause date animation" : "Play date animation"}
-          >
-            <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
-            {isPlaying ? "Pause" : "Play"}
-          </button>
-          <div className="floating-date-readout" aria-live={isPlaying ? "off" : "polite"}>
-            <span>Viewing</span>
-            <strong>{formatShortDate(selectedDate)}</strong>
-          </div>
-          <div className="date-slider-wrap floating-date-slider">
-            <span>{activeDates[0] ? formatShortDate(activeDates[0]) : ""}</span>
-            <input
-              type="range"
-              ref={floatingDateSliderRef}
-              min={0}
-              max={Math.max(0, activeDates.length - 1)}
-              value={selectedIndex}
-              onChange={(event) => changeCursor(Number(event.target.value))}
-              aria-label="Archive date"
-              aria-orientation="vertical"
-              aria-valuetext={formatFullDate(selectedDate)}
-            />
-            <span>{activeDates.at(-1) ? formatShortDate(activeDates.at(-1) as string) : ""}</span>
-          </div>
-        </div>
-      ) : null}
 
       <MobilityAtlas />
 
