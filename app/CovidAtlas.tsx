@@ -720,6 +720,11 @@ export function CovidAtlas() {
   const [floatingTimelineTop, setFloatingTimelineTop] = useState(176);
   const timeConsoleRef = useRef<HTMLDivElement>(null);
   const comparisonSectionRef = useRef<HTMLElement>(null);
+  const staticPlayButtonRef = useRef<HTMLButtonElement>(null);
+  const staticDateSliderRef = useRef<HTMLInputElement>(null);
+  const floatingPlayButtonRef = useRef<HTMLButtonElement>(null);
+  const floatingDateSliderRef = useRef<HTMLInputElement>(null);
+  const pendingHandoffFocusRef = useRef<"play" | "slider" | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -824,7 +829,16 @@ export function CovidAtlas() {
           timeConsole.getBoundingClientRect().top < visibilityThreshold - 1;
         const dynamicViewsRemainVisible =
           comparisonSection.getBoundingClientRect().bottom > visibilityThreshold;
-        setShowFloatingPlayback(consoleHasScrolledAway && dynamicViewsRemainVisible);
+        const shouldShowFloatingPlayback =
+          consoleHasScrolledAway && dynamicViewsRemainVisible;
+        if (shouldShowFloatingPlayback) {
+          if (document.activeElement === staticPlayButtonRef.current) {
+            pendingHandoffFocusRef.current = "play";
+          } else if (document.activeElement === staticDateSliderRef.current) {
+            pendingHandoffFocusRef.current = "slider";
+          }
+        }
+        setShowFloatingPlayback(shouldShowFloatingPlayback);
       });
     };
 
@@ -837,6 +851,17 @@ export function CovidAtlas() {
       window.removeEventListener("resize", updateFloatingPlayback);
     };
   }, [data]);
+
+  useEffect(() => {
+    if (!showFloatingPlayback) return;
+    const focusTarget = pendingHandoffFocusRef.current;
+    if (focusTarget === "play") {
+      floatingPlayButtonRef.current?.focus({ preventScroll: true });
+    } else if (focusTarget === "slider") {
+      floatingDateSliderRef.current?.focus({ preventScroll: true });
+    }
+    pendingHandoffFocusRef.current = null;
+  }, [showFloatingPlayback]);
 
   const archiveTotals = useMemo(() => {
     if (!data) return { cases: 0, deaths: 0 };
@@ -1009,13 +1034,14 @@ export function CovidAtlas() {
           your selection carries into the incidence comparison and burden ranking below.
         </p>
         <div
-          className="time-console"
+          className={`time-console${showFloatingPlayback ? " is-handoff-hidden" : ""}`}
           ref={timeConsoleRef}
           style={{ "--timeline-sticky-top": `${floatingTimelineTop}px` } as CSSProperties}
         >
           <button
             type="button"
             className="play-button"
+            ref={staticPlayButtonRef}
             onClick={togglePlayback}
             aria-label={isPlaying ? "Pause date animation" : "Play date animation"}
           >
@@ -1030,6 +1056,7 @@ export function CovidAtlas() {
             <span>{activeDates[0] ? formatShortDate(activeDates[0]) : ""}</span>
             <input
               type="range"
+              ref={staticDateSliderRef}
               min={0}
               max={Math.max(0, activeDates.length - 1)}
               value={selectedIndex}
@@ -1192,6 +1219,7 @@ export function CovidAtlas() {
         >
           <button
             type="button"
+            ref={floatingPlayButtonRef}
             onClick={togglePlayback}
             aria-label={isPlaying ? "Pause date animation" : "Play date animation"}
           >
@@ -1206,6 +1234,7 @@ export function CovidAtlas() {
             <span>{activeDates[0] ? formatShortDate(activeDates[0]) : ""}</span>
             <input
               type="range"
+              ref={floatingDateSliderRef}
               min={0}
               max={Math.max(0, activeDates.length - 1)}
               value={selectedIndex}

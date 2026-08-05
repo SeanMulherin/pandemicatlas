@@ -739,6 +739,11 @@ button {
   flex-direction: column;
 }
 
+.time-console.is-handoff-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .play-button {
   width: 100%;
   min-width: 0;

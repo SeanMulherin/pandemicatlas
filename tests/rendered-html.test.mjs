@@ -100,6 +100,10 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.doesNotMatch(atlas, /Burden ranks states by the active metric and view/);
   assert.match(atlas, /className="floating-playback"/);
   assert.match(atlas, /ref=\{timeConsoleRef\}/);
+  assert.match(atlas, /showFloatingPlayback \? " is-handoff-hidden" : ""/);
+  assert.match(atlas, /pendingHandoffFocusRef/);
+  assert.match(atlas, /floatingPlayButtonRef\.current\?\.focus\(\{ preventScroll: true \}\)/);
+  assert.match(atlas, /floatingDateSliderRef\.current\?\.focus\(\{ preventScroll: true \}\)/);
   assert.equal(atlas.match(/aria-orientation="vertical"/g)?.length, 2);
   assert.match(atlas, /className="date-slider-wrap floating-date-slider"/);
   assert.equal(
@@ -107,6 +111,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     2,
   );
   assert.match(styles, /\.time-console \{[\s\S]*?position: sticky;/);
+  assert.match(styles, /\.time-console\.is-handoff-hidden \{[\s\S]*?visibility: hidden;[\s\S]*?pointer-events: none;/);
   assert.match(styles, /\.floating-playback \{[\s\S]*?position: fixed;/);
   assert.match(styles, /writing-mode: vertical-lr;/);
   assert.match(styles, /cursor: ns-resize;/);
