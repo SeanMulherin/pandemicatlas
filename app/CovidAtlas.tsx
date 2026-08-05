@@ -716,10 +716,6 @@ export function CovidAtlas() {
     "Texas",
   ]);
   const [selectionMessage, setSelectionMessage] = useState("");
-  const [showFloatingPlayback, setShowFloatingPlayback] = useState(false);
-  const [floatingTimelineTop, setFloatingTimelineTop] = useState(176);
-  const timeConsoleRef = useRef<HTMLDivElement>(null);
-  const comparisonSectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -797,46 +793,6 @@ export function CovidAtlas() {
     }, 110);
     return () => window.clearInterval(timer);
   }, [activeDates, isPlaying]);
-
-  useEffect(() => {
-    if (!data) return;
-    let animationFrame = 0;
-
-    const updateFloatingPlayback = () => {
-      window.cancelAnimationFrame(animationFrame);
-      animationFrame = window.requestAnimationFrame(() => {
-        const timeConsoleSlot = timeConsoleRef.current;
-        const comparisonSection = comparisonSectionRef.current;
-        if (!timeConsoleSlot || !comparisonSection) {
-          setShowFloatingPlayback(false);
-          return;
-        }
-
-        const controlsBottom = document
-          .querySelector<HTMLElement>(".explorer-controls")
-          ?.getBoundingClientRect().bottom ?? 0;
-        const visibilityThreshold = Math.max(16, controlsBottom + 8);
-        const roundedThreshold = Math.round(visibilityThreshold);
-        setFloatingTimelineTop((current) =>
-          current === roundedThreshold ? current : roundedThreshold,
-        );
-        const consoleHasScrolledAway =
-          timeConsoleSlot.getBoundingClientRect().top < visibilityThreshold - 1;
-        const dynamicViewsRemainVisible =
-          comparisonSection.getBoundingClientRect().bottom > visibilityThreshold;
-        setShowFloatingPlayback(consoleHasScrolledAway && dynamicViewsRemainVisible);
-      });
-    };
-
-    updateFloatingPlayback();
-    window.addEventListener("scroll", updateFloatingPlayback, { passive: true });
-    window.addEventListener("resize", updateFloatingPlayback);
-    return () => {
-      window.cancelAnimationFrame(animationFrame);
-      window.removeEventListener("scroll", updateFloatingPlayback);
-      window.removeEventListener("resize", updateFloatingPlayback);
-    };
-  }, [data]);
 
   const archiveTotals = useMemo(() => {
     if (!data) return { cases: 0, deaths: 0 };
@@ -966,6 +922,34 @@ export function CovidAtlas() {
             ))}
           </div>
         </fieldset>
+        <div className="time-console" role="group" aria-label="Date animation controls">
+          <button
+            type="button"
+            className="play-button"
+            onClick={togglePlayback}
+            aria-label={isPlaying ? "Pause date animation" : "Play date animation"}
+          >
+            <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
+            {isPlaying ? "Pause" : "Play"}
+          </button>
+          <div className="date-readout" aria-live={isPlaying ? "off" : "polite"}>
+            <span>Viewing</span>
+            <strong>{formatFullDate(selectedDate)}</strong>
+          </div>
+          <div className="date-slider-wrap">
+            <span>{activeDates[0] ? formatShortDate(activeDates[0]) : ""}</span>
+            <input
+              type="range"
+              min={0}
+              max={Math.max(0, activeDates.length - 1)}
+              value={selectedIndex}
+              onChange={(event) => changeCursor(Number(event.target.value))}
+              aria-label="Archive date"
+              aria-valuetext={formatFullDate(selectedDate)}
+            />
+            <span>{activeDates.at(-1) ? formatShortDate(activeDates.at(-1) as string) : ""}</span>
+          </div>
+        </div>
       </div>
 
       <section className="atlas-section pulse-section" id="pulse">
@@ -1008,50 +992,6 @@ export function CovidAtlas() {
           Select the states you wish to highlight for evaluation. Choose up to ten state tiles;
           your selection carries into the incidence comparison and burden ranking below.
         </p>
-        <div
-          className="time-console-slot"
-          ref={timeConsoleRef}
-          style={{ "--timeline-sticky-top": `${floatingTimelineTop}px` } as CSSProperties}
-        >
-          <div
-            className={`time-console${showFloatingPlayback ? " is-floating" : ""}`}
-            role="group"
-            aria-label="Date animation controls"
-          >
-            <button
-              type="button"
-              className="play-button"
-              onClick={togglePlayback}
-              aria-label={isPlaying ? "Pause date animation" : "Play date animation"}
-            >
-              <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
-              {isPlaying ? "Pause" : "Play"}
-            </button>
-            <div className="date-readout" aria-live={isPlaying ? "off" : "polite"}>
-              <span>Viewing</span>
-              <strong>
-                {showFloatingPlayback
-                  ? formatShortDate(selectedDate)
-                  : formatFullDate(selectedDate)}
-              </strong>
-            </div>
-            <div className="date-slider-wrap">
-              <span>{activeDates[0] ? formatShortDate(activeDates[0]) : ""}</span>
-              <input
-                type="range"
-                min={0}
-                max={Math.max(0, activeDates.length - 1)}
-                value={selectedIndex}
-                onChange={(event) => changeCursor(Number(event.target.value))}
-                aria-label="Archive date"
-                aria-orientation="vertical"
-                aria-valuetext={formatFullDate(selectedDate)}
-              />
-              <span>{activeDates.at(-1) ? formatShortDate(activeDates.at(-1) as string) : ""}</span>
-            </div>
-          </div>
-        </div>
-
         <div className="map-layout">
           <div>
             <div className="tile-map" aria-label={`State tile map for ${formatFullDate(selectedDate)}`}>
@@ -1183,7 +1123,6 @@ export function CovidAtlas() {
       <section
         className="atlas-section county-incidence-section"
         id="county-incidence"
-        ref={comparisonSectionRef}
       >
         <CountyIncidenceMap
           selectedDate={selectedDate}

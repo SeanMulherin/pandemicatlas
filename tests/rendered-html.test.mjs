@@ -107,22 +107,22 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /<CountyIncidenceMap/);
   assert.match(atlas, /<MobilityAtlas covidSeries=\{data\.national\} covidMetric=\{metric\} \/>/);
   assert.doesNotMatch(atlas, /Burden ranks states by the active metric and view/);
-  assert.doesNotMatch(atlas, /floating-playback|is-handoff-hidden|pendingHandoffFocusRef/);
-  assert.match(atlas, /ref=\{timeConsoleRef\}/);
-  assert.match(atlas, /showFloatingPlayback \? " is-floating" : ""/);
+  assert.doesNotMatch(atlas, /floating-playback|is-handoff-hidden|pendingHandoffFocusRef|showFloatingPlayback|timeConsoleRef/);
+  assert.ok(atlas.indexOf('className="explorer-controls"') < atlas.indexOf('className="time-console"'));
+  assert.ok(atlas.indexOf('className="time-console"') < atlas.indexOf('id="pulse"'));
   assert.equal(atlas.match(/aria-label="Date animation controls"/g)?.length, 1);
   assert.equal(atlas.match(/className="play-button"/g)?.length, 1);
   assert.equal(atlas.match(/type="range"/g)?.length, 1);
-  assert.equal(atlas.match(/aria-orientation="vertical"/g)?.length, 1);
+  assert.doesNotMatch(atlas, /aria-orientation="vertical"/);
   assert.equal(
     atlas.match(/onChange=\{\(event\) => changeCursor\(Number\(event\.target\.value\)\)\}/g)?.length,
     1,
   );
-  assert.match(styles, /\.time-console-slot \{[\s\S]*?position: sticky;/);
-  assert.match(styles, /\.time-console\.is-floating \{[\s\S]*?position: fixed;/);
-  assert.doesNotMatch(styles, /\.floating-playback|\.time-console\.is-handoff-hidden/);
-  assert.match(styles, /writing-mode: vertical-lr;/);
-  assert.match(styles, /cursor: ns-resize;/);
+  assert.match(styles, /\.explorer-controls > \.time-console \{[\s\S]*?grid-column: 1 \/ -1;/);
+  assert.match(styles, /\.time-console \{[\s\S]*?grid-template-columns:/);
+  assert.doesNotMatch(styles, /\.time-console-slot|\.time-console\.is-floating|\.floating-playback|\.time-console\.is-handoff-hidden/);
+  assert.doesNotMatch(styles, /writing-mode: vertical-lr|cursor: ns-resize/);
+  assert.match(styles, /\.date-slider-wrap input\[type="range"\] \{[\s\S]*?cursor: ew-resize;/);
   assert.ok(
     atlas.indexOf('<h2 className="states-title">Statewide Incidence</h2>')
       < atlas.indexOf('<h2 className="analysis-title">Statewide Waves</h2>'),
@@ -243,12 +243,22 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     assert.ok(mobilityStory.indexOf(mobilityStoryTitles[index]) < mobilityStory.indexOf(title));
   });
   assert.equal(mobilityStory.match(/aria-label="Weekly mobility animation controls"/g)?.length, 1);
+  assert.match(mobilityStory, /createPortal/);
+  assert.match(mobilityStory, /timelineHost/);
+  assert.match(mobilityAtlas, /className="mobility-control-desk"/);
+  assert.match(mobilityAtlas, /className="mobility-timeline-slot" ref=\{setTimelineHost\}/);
+  assert.ok(
+    mobilityAtlas.indexOf('className="mobility-control-row"')
+      < mobilityAtlas.indexOf('className="mobility-timeline-slot"'),
+  );
   assert.match(mobilityStory, /mobility-dynamics\.json/);
   assert.match(mobilityStory, /mobility-weekly\.bin/);
   assert.match(mobilityStory, /rootMargin: "1200px 0px"/);
   assert.match(mobilityStory, /Mobility at week t is compared with incidence at week t \+ lag/);
   assert.match(mobilityStory, /does not estimate a causal effect/);
   assert.match(styles, /\.mobility-timeline \{/);
+  assert.match(styles, /\.mobility-control-desk \{[\s\S]*?position: sticky;/);
+  assert.match(styles, /\.mobility-timeline-slot \{/);
   assert.match(styles, /\.mobility-county-map-canvas/);
   assert.match(styles, /\.mobility-lag-canvas/);
   assert.match(mobilityBuild, /county_in_weekly/);

@@ -31,7 +31,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 10rem;
+  scroll-padding-top: 14.5rem;
   background: var(--paper);
 }
 
@@ -405,10 +405,10 @@ button {
   display: grid;
   grid-template-columns: auto auto minmax(20rem, 1fr);
   align-items: end;
-  gap: 0 2.25rem;
+  gap: 0.75rem 2.25rem;
   max-width: var(--content-width);
   margin: 0 auto;
-  padding: 1rem var(--page-gutter);
+  padding: 1rem var(--page-gutter) 1.1rem;
   border-right: 1px solid var(--rule);
   border-bottom: 1px solid var(--ink);
   border-left: 1px solid var(--rule);
@@ -489,6 +489,10 @@ button {
 
 .period-control button {
   flex: 1 1 auto;
+}
+
+.explorer-controls > .time-console {
+  grid-column: 1 / -1;
 }
 
 /* Shared chapter furniture */
@@ -696,14 +700,10 @@ button {
 /* State motion */
 
 .states-section {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(8.25rem, 12vw, 10rem);
-  column-gap: clamp(0.85rem, 2vw, 1.75rem);
   background: var(--paper-deep);
 }
 
 .states-title {
-  grid-column: 1 / -1;
   max-width: 18ch;
   margin: 0 0 1rem;
   font-family: var(--serif);
@@ -714,7 +714,6 @@ button {
 }
 
 .states-instructions {
-  grid-column: 1 / -1;
   max-width: 46rem;
   margin: 0 0 clamp(2.5rem, 5vw, 4rem);
   color: var(--ink-soft);
@@ -722,47 +721,21 @@ button {
   line-height: 1.7;
 }
 
-.time-console-slot {
-  position: sticky;
-  z-index: 10;
-  top: var(--timeline-sticky-top, 10.75rem);
-  grid-row: 3;
-  grid-column: 2;
-  align-self: start;
-  width: 100%;
-  height: min(31rem, calc(100vh - var(--timeline-sticky-top, 10.75rem) - 1.5rem));
-  min-height: 21rem;
-}
-
 .time-console {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(11rem, 0.45fr) minmax(18rem, 1fr);
+  align-items: stretch;
   width: 100%;
-  height: 100%;
-  min-height: 0;
   margin: 0;
   border: 1px solid var(--ink);
   background: var(--paper-light);
-  flex-direction: column;
-}
-
-.time-console.is-floating {
-  position: fixed;
-  z-index: 30;
-  top: var(--timeline-sticky-top, 10.75rem);
-  right: max(1rem, env(safe-area-inset-right));
-  width: 8rem;
-  height: min(30rem, calc(100vh - var(--timeline-sticky-top, 10.75rem) - 1rem));
-  min-height: 20rem;
-  box-shadow: 0 0.8rem 2.2rem rgba(21, 25, 30, 0.22);
 }
 
 .play-button {
-  width: 100%;
-  min-width: 0;
-  min-height: 3.5rem;
+  min-width: 8rem;
   padding: 1rem 1.25rem;
   border: 0;
-  border-bottom: 1px solid var(--ink);
+  border-right: 1px solid var(--ink);
   border-radius: 0;
   background: var(--cases-dark);
   color: var(--paper-light);
@@ -784,34 +757,10 @@ button {
   font-family: var(--mono);
 }
 
-.time-console.is-floating .play-button {
-  min-height: 3.4rem;
-  padding: 0.9rem 1.1rem;
-}
-
-.time-console.is-floating .play-button span {
-  margin-right: 0.4rem;
-}
-
-.time-console.is-floating .date-readout {
-  padding: 0.65rem 0.85rem;
-}
-
-.time-console.is-floating .date-readout span {
-  font-family: var(--mono);
-  font-size: 0.55rem;
-  letter-spacing: 0.06em;
-}
-
-.time-console.is-floating .date-readout strong {
-  font-size: 1rem;
-  line-height: 1;
-}
-
 .date-readout {
   min-width: 0;
   padding: 0.8rem 1.2rem;
-  border-bottom: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
 }
 
 .date-readout strong {
@@ -823,29 +772,25 @@ button {
   font-weight: 400;
   line-height: 1.1;
   text-overflow: ellipsis;
-  white-space: normal;
+  white-space: nowrap;
 }
 
 .date-slider-wrap {
   display: grid;
-  grid-template-rows: auto minmax(8rem, 1fr) auto;
-  justify-items: center;
-  flex: 1 1 auto;
+  grid-template-columns: auto minmax(8rem, 1fr) auto;
+  gap: 0.8rem;
+  align-items: center;
   min-width: 0;
-  min-height: 0;
-  padding: 0.75rem 0.55rem;
+  padding: 0.75rem 1.1rem;
 }
 
 .date-slider-wrap input[type="range"] {
-  width: 1.4rem;
-  height: 100%;
+  width: 100%;
+  height: 1.3rem;
   margin: 0;
   background: transparent;
   accent-color: var(--deaths);
-  cursor: ns-resize;
-  direction: ltr;
-  touch-action: none;
-  writing-mode: vertical-lr;
+  cursor: ew-resize;
 }
 
 .date-slider-wrap > span {
@@ -854,13 +799,11 @@ button {
   font-size: 0.5rem;
   letter-spacing: -0.025em;
   line-height: 1.2;
-  text-align: center;
+  white-space: nowrap;
   text-transform: uppercase;
 }
 
 .map-layout {
-  grid-row: 3;
-  grid-column: 1;
   display: block;
 }
 
@@ -1614,15 +1557,23 @@ button {
   color: var(--cases-dark);
 }
 
+.mobility-control-desk {
+  position: sticky;
+  z-index: 18;
+  top: 4.5rem;
+  margin-right: calc(-1 * var(--page-gutter));
+  margin-bottom: clamp(3.5rem, 7vw, 7rem);
+  margin-left: calc(-1 * var(--page-gutter));
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper-light);
+}
+
 .mobility-control-row {
   display: flex;
   align-items: end;
   gap: 1rem;
-  margin-bottom: clamp(3.5rem, 7vw, 7rem);
-  padding: 1rem;
-  border: 1px solid var(--ink);
-  background: var(--ink);
-  color: var(--paper-light);
+  padding: 1rem var(--page-gutter);
 }
 
 .mobility-control-row label {
@@ -1674,6 +1625,28 @@ button {
 .mobility-control-row button:hover {
   background: var(--paper-light);
   color: var(--ink);
+}
+
+.mobility-timeline-slot {
+  min-height: 4.55rem;
+  padding: 0 var(--page-gutter) 1rem;
+}
+
+.mobility-timeline-slot .mobility-timeline {
+  margin: 0;
+}
+
+.mobility-timeline-loading {
+  display: flex;
+  align-items: center;
+  min-height: 4.55rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid rgba(255, 253, 247, 0.55);
+  color: rgba(255, 253, 247, 0.72);
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .mobility-figure + .mobility-figure {
@@ -2562,6 +2535,16 @@ button {
     grid-column: 1 / -1;
   }
 
+  .time-console {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .date-slider-wrap {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--rule);
+  }
+
   .section-heading,
   .methodology-intro {
     grid-template-columns: 1fr;
@@ -2592,17 +2575,6 @@ button {
     height: 22rem;
   }
 
-  .states-section {
-    grid-template-columns: minmax(0, 1fr) 6.5rem;
-    column-gap: 0.7rem;
-  }
-
-  .time-console-slot {
-    top: 1rem;
-    height: min(27rem, calc(100vh - 2rem));
-    min-height: 19rem;
-  }
-
   .play-button {
     padding-right: 0.65rem;
     padding-left: 0.65rem;
@@ -2615,23 +2587,6 @@ button {
 
   .date-readout strong {
     font-size: 1rem;
-  }
-
-  .time-console.is-floating {
-    right: max(0.55rem, env(safe-area-inset-right));
-    width: 6.5rem;
-    height: min(27rem, calc(100vh - var(--timeline-sticky-top, 1rem) - 0.55rem));
-    min-height: 18rem;
-  }
-
-  .time-console.is-floating .play-button {
-    padding-right: 0.65rem;
-    padding-left: 0.65rem;
-  }
-
-  .time-console.is-floating .date-readout {
-    padding-right: 0.7rem;
-    padding-left: 0.7rem;
   }
 
   .map-layout > div:first-child {
@@ -2756,6 +2711,11 @@ button {
   .mobility-control-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .mobility-control-desk {
+    position: relative;
+    top: auto;
   }
 
   .mobility-control-row label {
@@ -2935,11 +2895,6 @@ button {
     border-bottom: 0;
   }
 
-  .states-section {
-    grid-template-columns: minmax(0, 1fr) 5.75rem;
-    column-gap: 0.55rem;
-  }
-
   .play-button {
     font-size: 0.58rem;
   }
@@ -2953,12 +2908,15 @@ button {
     font-size: 0.88rem;
   }
 
-  .time-console.is-floating {
-    width: 5.75rem;
-  }
-
   .date-slider-wrap > span {
     font-size: 0.44rem;
+  }
+
+  .date-slider-wrap {
+    grid-template-columns: auto minmax(3rem, 1fr) auto;
+    gap: 0.35rem;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
   }
 
   .comparison-readout {

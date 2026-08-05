@@ -9,6 +9,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { createPortal } from "react-dom";
 
 export interface MobilityStoryCounty {
   fips: string;
@@ -110,6 +111,7 @@ interface MobilityStoryProps {
   onFocusState: (state: string) => void;
   covidSeries: MobilityCovidDatum[];
   covidMetric: CovidMetric;
+  timelineHost: HTMLElement | null;
 }
 
 const ALL_STATES = "All states";
@@ -1095,6 +1097,7 @@ export default function MobilityStory({
   onFocusState,
   covidSeries,
   covidMetric,
+  timelineHost,
 }: MobilityStoryProps) {
   const firstFigureRef = useRef<HTMLElement>(null);
   const [shouldLoad, setShouldLoad] = useState(false);
@@ -1108,8 +1111,8 @@ export default function MobilityStory({
   const [lagWeeks, setLagWeeks] = useState(2);
 
   useEffect(() => {
-    const figure = firstFigureRef.current;
-    if (!figure || typeof IntersectionObserver === "undefined") {
+    const loadTrigger = timelineHost ?? firstFigureRef.current;
+    if (!loadTrigger || typeof IntersectionObserver === "undefined") {
       setShouldLoad(true);
       return;
     }
@@ -1121,9 +1124,9 @@ export default function MobilityStory({
       },
       { rootMargin: "1200px 0px" },
     );
-    observer.observe(figure);
+    observer.observe(loadTrigger);
     return () => observer.disconnect();
-  }, []);
+  }, [timelineHost]);
 
   useEffect(() => {
     if (!shouldLoad) return;
@@ -1198,39 +1201,62 @@ export default function MobilityStory({
     if (county && county.state !== focusState) onFocusState(county.state);
   }, [countiesByFips, focusState, onFocusState]);
 
+  const timelinePortal = timelineHost
+    ? createPortal(
+      assets ? (
+        <MobilityTimelineControls
+          pulse={assets.metadata.pulse}
+          weekIndex={weekIndex}
+          isPlaying={isPlaying}
+          onWeekIndex={setWeekIndex}
+          onTogglePlayback={() => setIsPlaying((playing) => !playing)}
+        />
+      ) : (
+        <div className="mobility-timeline-loading" role="status">
+          {loadError || (shouldLoad ? "Preparing the weekly mobility timeline…" : "Weekly mobility timeline loads as this section approaches.")}
+        </div>
+      ),
+      timelineHost,
+    )
+    : null;
+
   if (!assets || !paths) {
     return (
-      <article className="mobility-figure mobility-dynamic-figure" ref={firstFigureRef}>
-        <div className="mobility-figure-heading mobility-figure-heading-plain">
-          <div>
-            <h3>National Mobility Pulse</h3>
-            <p>
-              Weekly detected movement compared with the corresponding week in the 2019 archive.
-            </p>
+      <>
+        {timelinePortal}
+        <article className="mobility-figure mobility-dynamic-figure" ref={firstFigureRef}>
+          <div className="mobility-figure-heading mobility-figure-heading-plain">
+            <div>
+              <h3>National Mobility Pulse</h3>
+              <p>
+                Weekly detected movement compared with the corresponding week in the 2019 archive.
+              </p>
+            </div>
           </div>
-        </div>
-        <div className={`mobility-dynamics-status${loadError ? " is-error" : ""}`} role={loadError ? "alert" : "status"}>
-          <span aria-hidden="true" />
-          <p>{loadError || (shouldLoad ? "Preparing 156 weeks of county mobility…" : "Weekly mobility loads as this figure approaches.")}</p>
-          {loadError ? (
-            <button
-              type="button"
-              onClick={() => {
-                setLoadError("");
-                setLoadAttempt((attempt) => attempt + 1);
-              }}
-            >
-              Try loading again
-            </button>
-          ) : null}
-        </div>
-      </article>
+          <div className={`mobility-dynamics-status${loadError ? " is-error" : ""}`} role={loadError ? "alert" : "status"}>
+            <span aria-hidden="true" />
+            <p>{loadError || (shouldLoad ? "Preparing 156 weeks of county mobility…" : "Weekly mobility loads as this figure approaches.")}</p>
+            {loadError ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setLoadError("");
+                  setLoadAttempt((attempt) => attempt + 1);
+                }}
+              >
+                Try loading again
+              </button>
+            ) : null}
+          </div>
+        </article>
+      </>
     );
   }
 
   const activeWeek = assets.metadata.pulse[weekIndex];
   return (
     <>
+      {timelinePortal}
       <article className="mobility-figure mobility-dynamic-figure" ref={firstFigureRef}>
         <div className="mobility-figure-heading mobility-figure-heading-plain">
           <div>
@@ -1241,13 +1267,6 @@ export default function MobilityStory({
             </p>
           </div>
         </div>
-        <MobilityTimelineControls
-          pulse={assets.metadata.pulse}
-          weekIndex={weekIndex}
-          isPlaying={isPlaying}
-          onWeekIndex={setWeekIndex}
-          onTogglePlayback={() => setIsPlaying((playing) => !playing)}
-        />
         <NationalMobilityPulse
           pulse={assets.metadata.pulse}
           scope={pulseScope}

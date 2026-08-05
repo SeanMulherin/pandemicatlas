@@ -604,6 +604,7 @@ export default function MobilityAtlas({
   const [data, setData] = useState<MobilityData | null>(null);
   const [error, setError] = useState("");
   const [focusState, setFocusState] = useState(ALL_STATES);
+  const [timelineHost, setTimelineHost] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -684,22 +685,25 @@ export default function MobilityAtlas({
         </div>
       </div>
 
-      <div className="mobility-control-row">
-        <label htmlFor="mobility-state-focus">
-          <span>State focus</span>
-          <select
-            id="mobility-state-focus"
-            value={focusState}
-            onChange={(event) => setFocusState(event.target.value)}
-          >
-            <option>{ALL_STATES}</option>
-            {stateNames.map((state) => <option key={state}>{state}</option>)}
-          </select>
-        </label>
-        <p>Click a state in the wheel to coordinate both views.</p>
-        {focusState !== ALL_STATES && (
-          <button type="button" onClick={() => setFocusState(ALL_STATES)}>Reset focus</button>
-        )}
+      <div className="mobility-control-desk" role="group" aria-label="Mobility explorer controls">
+        <div className="mobility-control-row">
+          <label htmlFor="mobility-state-focus">
+            <span>State focus</span>
+            <select
+              id="mobility-state-focus"
+              value={focusState}
+              onChange={(event) => setFocusState(event.target.value)}
+            >
+              <option>{ALL_STATES}</option>
+              {stateNames.map((state) => <option key={state}>{state}</option>)}
+            </select>
+          </label>
+          <p>Click a state in the wheel to coordinate both views.</p>
+          {focusState !== ALL_STATES && (
+            <button type="button" onClick={() => setFocusState(ALL_STATES)}>Reset focus</button>
+          )}
+        </div>
+        <div className="mobility-timeline-slot" ref={setTimelineHost} />
       </div>
 
       <article className="mobility-figure">
@@ -740,6 +744,7 @@ export default function MobilityAtlas({
         onFocusState={setFocusState}
         covidSeries={covidSeries}
         covidMetric={covidMetric}
+        timelineHost={timelineHost}
       />
 
       <div className="mobility-source-note">
