@@ -32,7 +32,12 @@ test("server-renders the finished Pandemic Atlas shell", async () => {
   assert.match(html, /<title>The Pandemic Atlas<\/title>/i);
   assert.match(html, /Trace U\.S\. COVID-19 cases and deaths/i);
   assert.match(html, /\/og\.png/);
-  assert.match(html, /Preparing 63,000\+ daily records/);
+  assert.match(html, /Exploring the US COVID-19 Pandemic/);
+  assert.match(html, /A visual record of COVID-19 in the United States/);
+  assert.match(html, /1,158 days/);
+  assert.match(html, /103\.9M/);
+  assert.match(html, /1\.1M/);
+  assert.doesNotMatch(html, /Preparing 63,000\+ daily records|Rebuilding the pandemic, day by day/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|Starter Project/i);
 });
 

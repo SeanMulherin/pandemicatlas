@@ -641,14 +641,47 @@ function ComparisonChart({
   );
 }
 
+function AtlasHeader() {
+  return (
+    <header className="site-header">
+      <a className="home-button" href="https://seanmulherin.github.io/">Home</a>
+      <a className="site-title" href="#top">Exploring the US COVID-19 Pandemic</a>
+    </header>
+  );
+}
+
+function AtlasHero({ cases, deaths }: { cases: string; deaths: string }) {
+  return (
+    <section className="editorial-hero" id="top">
+      <div className="hero-copy">
+        <p className="hero-eyebrow">A visual record of COVID-19 in the United States</p>
+        <h1>1,158 days</h1>
+        <div className="hero-ledger" aria-label="Archive summary">
+          <div>
+            <span>Archive span</span>
+            <strong>Jan ’20—Mar ’23</strong>
+          </div>
+          <div>
+            <span>Reported cases*</span>
+            <strong>{cases}</strong>
+          </div>
+          <div>
+            <span>Reported deaths*</span>
+            <strong>{deaths}</strong>
+          </div>
+          <p>*Net sum of daily reports, including later corrections.</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function LoadingView() {
   return (
-    <main className="atlas-state-view" aria-busy="true">
-      <div className="atlas-state-mark">COVID / US</div>
-      <div className="loading-pulse" aria-hidden="true" />
-      <p className="state-eyebrow">Preparing 63,000+ daily records</p>
-      <h1>Rebuilding the pandemic, day by day.</h1>
-      <p>Loading the national and state archives…</p>
+    <main className="covid-atlas" aria-busy="true">
+      <AtlasHeader />
+      <AtlasHero cases="103.9M" deaths="1.1M" />
+      <p className="visually-hidden" role="status">Loading the national and state archives…</p>
     </main>
   );
 }
@@ -891,32 +924,11 @@ export function CovidAtlas() {
 
   return (
     <main className="covid-atlas">
-      <header className="site-header">
-        <a className="home-button" href="https://seanmulherin.github.io/">Home</a>
-        <a className="site-title" href="#top">Exploring the US COVID-19 Pandemic</a>
-      </header>
-
-      <section className="editorial-hero" id="top">
-        <div className="hero-copy">
-          <p className="hero-eyebrow">A visual record of COVID-19 in the United States</p>
-          <h1>1,158 days</h1>
-          <div className="hero-ledger" aria-label="Archive summary">
-            <div>
-              <span>Archive span</span>
-              <strong>Jan ’20—Mar ’23</strong>
-            </div>
-            <div>
-              <span>Reported cases*</span>
-              <strong>{compactFormatter.format(archiveTotals.cases)}</strong>
-            </div>
-            <div>
-              <span>Reported deaths*</span>
-              <strong>{compactFormatter.format(archiveTotals.deaths)}</strong>
-            </div>
-            <p>*Net sum of daily reports, including later corrections.</p>
-          </div>
-        </div>
-      </section>
+      <AtlasHeader />
+      <AtlasHero
+        cases={compactFormatter.format(archiveTotals.cases)}
+        deaths={compactFormatter.format(archiveTotals.deaths)}
+      />
 
       <div className="explorer-controls" aria-label="Explorer controls">
         <SegmentedControl<Metric>

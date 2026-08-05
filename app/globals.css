@@ -74,6 +74,18 @@ button {
   outline-offset: 3px;
 }
 
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 .covid-atlas {
   min-height: 100vh;
   overflow: clip;
@@ -2164,46 +2176,6 @@ button {
   margin-top: 2rem;
 }
 
-.loading-pulse {
-  position: absolute;
-  right: clamp(2rem, 8vw, 8rem);
-  bottom: clamp(2rem, 8vw, 8rem);
-  width: min(36rem, 38vw);
-  height: 8rem;
-  border-bottom: 1px solid var(--ink);
-}
-
-.loading-pulse::before,
-.loading-pulse::after {
-  position: absolute;
-  bottom: 0;
-  width: 16%;
-  background: var(--cases);
-  content: "";
-  transform-origin: bottom;
-  animation: archive-pulse 1.25s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
-}
-
-.loading-pulse::before {
-  left: 24%;
-  height: 72%;
-}
-
-.loading-pulse::after {
-  left: 48%;
-  height: 42%;
-  background: var(--deaths);
-  animation-delay: -0.55s;
-}
-
-@keyframes archive-pulse {
-  from {
-    transform: scaleY(0.16);
-  }
-  to {
-    transform: scaleY(1);
-  }
-}
 
 @keyframes loading-line {
   from {
@@ -2593,14 +2565,6 @@ button {
     align-self: flex-start;
   }
 
-  .loading-pulse {
-    position: relative;
-    right: auto;
-    bottom: auto;
-    order: 2;
-    width: 100%;
-    margin-top: 3rem;
-  }
 }
 
 @media (max-width: 34rem) {
