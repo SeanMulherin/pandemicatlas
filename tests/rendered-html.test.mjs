@@ -46,6 +46,8 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     national,
     states,
     mobilityRaw,
+    mobilityDynamicsRaw,
+    mobilityWeekly,
     countyMetadataRaw,
     countyValues,
     socialCard,
@@ -56,11 +58,15 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     styles,
     countyMap,
     mobilityAtlas,
+    mobilityStory,
+    mobilityBuild,
     countyBuild,
   ] = await Promise.all([
     readFile(new URL("../public/data/us.csv", import.meta.url), "utf8"),
     readFile(new URL("../public/data/us-states.csv", import.meta.url), "utf8"),
     readFile(new URL("../public/data/mobility.json", import.meta.url), "utf8"),
+    readFile(new URL("../public/data/mobility-dynamics.json", import.meta.url), "utf8"),
+    readFile(new URL("../public/data/mobility-weekly.bin", import.meta.url)),
     readFile(new URL("../public/data/county-incidence-map.json", import.meta.url), "utf8"),
     readFile(new URL("../public/data/county-incidence.bin", import.meta.url)),
     readFile(new URL("../public/og.png", import.meta.url)),
@@ -71,9 +77,12 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/CountyIncidenceMap.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/MobilityAtlas.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/MobilityStory.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../analysis/prepare_kang_mobility_all.R", import.meta.url), "utf8"),
     readFile(new URL("../analysis/prepare_county_incidence.mjs", import.meta.url), "utf8"),
   ]);
   const mobility = JSON.parse(mobilityRaw);
+  const mobilityDynamics = JSON.parse(mobilityDynamicsRaw);
   const countyMetadata = JSON.parse(countyMetadataRaw);
 
   assert.match(national, /^date,geoid,cases,cases_avg,cases_avg_per_100k/);
@@ -96,7 +105,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /MAX_SELECTED_STATES = 10/);
   assert.match(atlas, /Statewide Rankings/);
   assert.match(atlas, /<CountyIncidenceMap/);
-  assert.match(atlas, /<MobilityAtlas \/>/);
+  assert.match(atlas, /<MobilityAtlas covidSeries=\{data\.national\} covidMetric=\{metric\} \/>/);
   assert.doesNotMatch(atlas, /Burden ranks states by the active metric and view/);
   assert.doesNotMatch(atlas, /floating-playback|is-handoff-hidden|pendingHandoffFocusRef/);
   assert.match(atlas, /ref=\{timeConsoleRef\}/);
@@ -145,7 +154,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   );
   assert.doesNotMatch(atlas, /id="fingerprints"|MiniWaveCanvas|fingerprintSeries/);
   assert.ok(atlas.indexOf("Statewide Rankings") < atlas.indexOf("<CountyIncidenceMap"));
-  assert.ok(atlas.indexOf("<CountyIncidenceMap") < atlas.indexOf("<MobilityAtlas />"));
+  assert.ok(atlas.indexOf("<CountyIncidenceMap") < atlas.indexOf("<MobilityAtlas covidSeries"));
   assert.match(countyMap, /Countywide Incidence/);
   assert.match(countyMap, /Darker blue indicates higher incidence/);
   assert.match(countyMap, /county-incidence-map\.json/);
@@ -216,8 +225,35 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityAtlas, /weekly county release continues/);
   assert.match(mobilityAtlas, /Where state borders were most porous/);
   assert.match(mobilityAtlas, /Which counties pulled travel in—or pushed it out/);
+  assert.match(mobilityAtlas, /<MobilityStory/);
+  assert.ok(
+    mobilityAtlas.indexOf("Which counties pulled travel in—or pushed it out")
+      < mobilityAtlas.indexOf("<MobilityStory"),
+  );
   assert.match(mobilityAtlas, /not unique individuals/);
   assert.doesNotMatch(mobilityAtlas, /05<\/span> Human mobility|01 \/ Interstate network|02 \/ County hubs/);
+  const mobilityStoryTitles = [
+    "National Mobility Pulse",
+    "Animated County Flow Map",
+    "County Mobility Spotlight",
+    "Mobility–Incidence Lag Explorer",
+  ];
+  mobilityStoryTitles.forEach((title) => assert.match(mobilityStory, new RegExp(title)));
+  mobilityStoryTitles.slice(1).forEach((title, index) => {
+    assert.ok(mobilityStory.indexOf(mobilityStoryTitles[index]) < mobilityStory.indexOf(title));
+  });
+  assert.equal(mobilityStory.match(/aria-label="Weekly mobility animation controls"/g)?.length, 1);
+  assert.match(mobilityStory, /mobility-dynamics\.json/);
+  assert.match(mobilityStory, /mobility-weekly\.bin/);
+  assert.match(mobilityStory, /rootMargin: "1200px 0px"/);
+  assert.match(mobilityStory, /Mobility at week t is compared with incidence at week t \+ lag/);
+  assert.match(mobilityStory, /does not estimate a causal effect/);
+  assert.match(styles, /\.mobility-timeline \{/);
+  assert.match(styles, /\.mobility-county-map-canvas/);
+  assert.match(styles, /\.mobility-lag-canvas/);
+  assert.match(mobilityBuild, /county_in_weekly/);
+  assert.match(mobilityBuild, /pulseBaseline/);
+  assert.match(mobilityBuild, /KANGWEEKLYFLOW01/);
   assert.equal(mobility.meta.coverageStart, "2019-01-07");
   assert.equal(mobility.meta.coverageEnd, "2022-01-02");
   assert.equal(mobility.meta.sourceFileCount, 156);
@@ -237,6 +273,68 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.equal(mobility.quality.duplicatePairsWithinOrigin, 0);
   assert.equal(mobility.quality.originBlockReentries, 0);
   assert.equal(mobility.quality.countyLabelConflicts, 0);
+
+  assert.equal(mobilityDynamics.version, 1);
+  assert.equal(mobilityDynamics.coverageStart, "2019-01-07");
+  assert.equal(mobilityDynamics.coverageEnd, "2022-01-02");
+  assert.equal(mobilityDynamics.weekCount, 156);
+  assert.equal(mobilityDynamics.countyCount, 3_142);
+  assert.equal(mobilityDynamics.fieldCount, 2);
+  assert.equal(mobilityDynamics.pulse.length, 156);
+  assert.equal(mobilityDynamics.geometryBuildId, countyMetadata.buildId);
+  assert.equal(mobilityWeekly.byteLength, mobilityDynamics.binaryBytes);
+  assert.equal(mobilityWeekly.byteLength, 16 + (156 * 3_142 * 2 * 4));
+  assert.equal(
+    mobilityWeekly.subarray(0, mobilityDynamics.binaryHeaderBytes).toString("hex"),
+    mobilityDynamics.buildId,
+  );
+  assert.equal(mobilityDynamics.pulse[0].weekStart, "2019-01-07");
+  assert.equal(mobilityDynamics.pulse.at(-1).weekEnd, "2022-01-02");
+  mobilityDynamics.pulse.forEach((row, index) => {
+    assert.equal(row.seasonalWeek, (index % 52) + 1);
+    assert.equal(row.withinCountyObserved + row.crossCountyObserved, row.totalObserved);
+    assert.equal(
+      row.intrastateCrossCountyObserved + row.interstateObserved,
+      row.crossCountyObserved,
+    );
+    if (index < 52) {
+      assert.equal(row.totalIndex, 100);
+      assert.equal(row.withinCountyIndex, 100);
+      assert.equal(row.crossCountyIndex, 100);
+    }
+    if (index > 0) {
+      assert.equal(
+        Date.parse(row.weekStart) - Date.parse(mobilityDynamics.pulse[index - 1].weekStart),
+        7 * 86_400_000,
+      );
+    }
+  });
+
+  let inboundArchiveTotal = 0;
+  let outboundArchiveTotal = 0;
+  const flowValue = (week, county, field) => mobilityWeekly.readUInt32LE(
+    mobilityDynamics.binaryHeaderBytes
+      + (((week * mobilityDynamics.countyCount + county) * mobilityDynamics.fieldCount + field) * 4),
+  );
+  for (let week = 0; week < mobilityDynamics.weekCount; week += 1) {
+    let inboundWeek = 0;
+    let outboundWeek = 0;
+    for (let county = 0; county < mobilityDynamics.countyCount; county += 1) {
+      inboundWeek += flowValue(week, county, 0);
+      outboundWeek += flowValue(week, county, 1);
+    }
+    assert.equal(inboundWeek, outboundWeek);
+    assert.equal(inboundWeek, mobilityDynamics.pulse[week].crossCountyObserved);
+    inboundArchiveTotal += inboundWeek;
+    outboundArchiveTotal += outboundWeek;
+  }
+  const expectedCrossCounty = mobility.meta.intrastateCrossCountyObserved + mobility.meta.interstateObserved;
+  assert.equal(inboundArchiveTotal, expectedCrossCounty);
+  assert.equal(outboundArchiveTotal, expectedCrossCounty);
+  assert.deepEqual(
+    new Set(mobility.counties.map((county) => county.fips)),
+    new Set(countyMetadata.geometry.counties.map((county) => county.fips)),
+  );
 
   await assert.rejects(access(new URL("../app/_sites-preview/SkeletonPreview.tsx", import.meta.url)));
   await access(new URL("../public/favicon.png", import.meta.url));

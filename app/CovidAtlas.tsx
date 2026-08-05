@@ -1193,7 +1193,7 @@ export function CovidAtlas() {
         />
       </section>
 
-      <MobilityAtlas />
+      <MobilityAtlas covidSeries={data.national} covidMetric={metric} />
 
       <section className="methodology-section" id="methodology">
         <div className="methodology-grid">

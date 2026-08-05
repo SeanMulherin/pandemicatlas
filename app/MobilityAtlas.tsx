@@ -8,6 +8,7 @@ import {
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
+import MobilityStory, { type MobilityCovidDatum } from "./MobilityStory";
 
 interface MobilityMeta {
   source: string;
@@ -593,7 +594,13 @@ function CountyBalance({
   );
 }
 
-export default function MobilityAtlas() {
+export default function MobilityAtlas({
+  covidSeries,
+  covidMetric,
+}: {
+  covidSeries: MobilityCovidDatum[];
+  covidMetric: "cases" | "deaths";
+}) {
   const [data, setData] = useState<MobilityData | null>(null);
   const [error, setError] = useState("");
   const [focusState, setFocusState] = useState(ALL_STATES);
@@ -727,11 +734,20 @@ export default function MobilityAtlas() {
         <CountyBalance counties={data.counties} focusState={focusState} />
       </article>
 
+      <MobilityStory
+        counties={data.counties}
+        focusState={focusState}
+        onFocusState={setFocusState}
+        covidSeries={covidSeries}
+        covidMetric={covidMetric}
+      />
+
       <div className="mobility-source-note">
         <p>
           *These figures use detected visitor flows rather than population-inferred estimates.
-          Counts are cumulative movement observations, not unique individuals. Both figures
-          aggregate all {formatInteger(data.meta.sourceFileCount)} published weekly county files.
+          Counts are movement observations, not unique individuals. The first two figures
+          aggregate all {formatInteger(data.meta.sourceFileCount)} published weekly county files;
+          the four figures below them retain the weekly sequence from those same files.
         </p>
         <p>
           Kang’s daily county release ends Apr. 15, 2021, but its weekly county release continues

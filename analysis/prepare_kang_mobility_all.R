@@ -6,8 +6,8 @@
 # The source repository is about 1 GB as a compressed Git pack and expands to
 # roughly 11 GB of CSV. To keep the project and local disk lean, this script
 # reads each CSV directly from the Git object database, retains only the four
-# columns required for the atlas, and accumulates compact state/county totals.
-# No raw CSV is checked into the site.
+# columns required for the atlas, and accumulates compact archive totals plus a
+# week-by-county inbound/outbound matrix. No raw CSV is checked into the site.
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -27,6 +27,9 @@ script_file <- sub(
 )
 project_root <- normalizePath(file.path(dirname(script_file), ".."), mustWork = TRUE)
 default_output <- file.path(project_root, "public", "data", "mobility.json")
+default_dynamics <- file.path(project_root, "public", "data", "mobility-dynamics.json")
+default_binary <- file.path(project_root, "public", "data", "mobility-weekly.bin")
+default_geometry <- file.path(project_root, "public", "data", "county-incidence-map.json")
 default_cache_root <- Sys.getenv(
   "KANG_CACHE_DIR",
   unset = file.path(path.expand("~"), ".cache", "pandemic-atlas")
@@ -37,12 +40,18 @@ parse_args <- function(args) {
   values <- list(
     repo = Sys.getenv("KANG_WEEKLY_REPO", unset = default_repo),
     output = default_output,
-    labels = default_output
+    labels = default_output,
+    dynamics = default_dynamics,
+    binary = default_binary,
+    geometry = default_geometry
   )
   for (arg in args) {
     if (startsWith(arg, "--repo=")) values$repo <- sub("^--repo=", "", arg)
     else if (startsWith(arg, "--output=")) values$output <- sub("^--output=", "", arg)
     else if (startsWith(arg, "--labels=")) values$labels <- sub("^--labels=", "", arg)
+    else if (startsWith(arg, "--dynamics=")) values$dynamics <- sub("^--dynamics=", "", arg)
+    else if (startsWith(arg, "--binary=")) values$binary <- sub("^--binary=", "", arg)
+    else if (startsWith(arg, "--geometry=")) values$geometry <- sub("^--geometry=", "", arg)
     else stop("Unknown argument: ", arg, call. = FALSE)
   }
   values
@@ -161,6 +170,22 @@ load_county_lookup <- function(path) {
   lookup
 }
 
+load_geometry_order <- function(path, county_lookup) {
+  if (!file.exists(path)) {
+    stop("County map metadata was not found: ", path, call. = FALSE)
+  }
+  metadata <- fromJSON(path, simplifyDataFrame = TRUE)
+  counties <- as.data.table(metadata$geometry$counties)
+  if (!"fips" %in% names(counties) || nrow(counties) != nrow(county_lookup)) {
+    stop("County map metadata does not contain the expected 3,142 county GEOIDs", call. = FALSE)
+  }
+  order <- as.character(counties$fips)
+  if (uniqueN(order) != length(order) || !setequal(order, county_lookup$fips)) {
+    stop("County map GEOIDs do not match the Kang county lookup", call. = FALSE)
+  }
+  list(fips = order, build_id = as.character(metadata$buildId))
+}
+
 read_week <- function(repo, path) {
   object <- paste0("HEAD:", path)
   command <- paste(
@@ -177,9 +202,10 @@ read_week <- function(repo, path) {
   )
 }
 
-build_archive <- function(repo, output, labels) {
+build_archive <- function(repo, output, labels, dynamics, binary, geometry) {
   weeks <- discover_week_files(repo)
   county_lookup <- load_county_lookup(labels)
+  geometry_order <- load_geometry_order(geometry, county_lookup)
   state_by_fips <- setNames(county_lookup$state, substr(county_lookup$fips, 1, 2))
   state_by_fips <- state_by_fips[!duplicated(names(state_by_fips))]
   allowed_counties <- county_lookup$fips
@@ -191,6 +217,9 @@ build_archive <- function(repo, output, labels) {
   interstate_out_parts <- vector("list", nrow(weeks))
   directed_parts <- vector("list", nrow(weeks))
   pair_parts <- vector("list", nrow(weeks))
+  pulse_parts <- vector("list", nrow(weeks))
+  county_in_weekly <- matrix(0, nrow = nrow(weeks), ncol = length(geometry_order$fips))
+  county_out_weekly <- matrix(0, nrow = nrow(weeks), ncol = length(geometry_order$fips))
 
   row_count <- valid_row_count <- malformed_rows <- excluded_non_atlas_rows <- 0
   negative_value_rows <- zero_value_rows <- duplicate_pairs <- 0
@@ -203,6 +232,7 @@ build_archive <- function(repo, output, labels) {
   for (i in seq_len(nrow(weeks))) {
     week <- read_week(repo, weeks$path[i])
     row_count <- row_count + nrow(week)
+    week_end <- weeks$week_start[i] + 6L
 
     ranges <- unique(week$date_range[!is.na(week$date_range)])
     if (length(ranges) != 1L) {
@@ -213,6 +243,7 @@ build_archive <- function(repo, output, labels) {
       if (length(parsed) != 2L || anyNA(parsed) || parsed[1] != weeks$week_start[i]) {
         date_range_conflicts <- date_range_conflicts + 1L
       } else {
+        week_end <- parsed[2]
         if (is.na(coverage_start) || parsed[1] < coverage_start) coverage_start <- parsed[1]
         if (is.na(coverage_end) || parsed[2] > coverage_end) coverage_end <- parsed[2]
       }
@@ -235,23 +266,41 @@ build_archive <- function(repo, output, labels) {
     valid_row_count <- valid_row_count + nrow(week)
     duplicate_pairs <- duplicate_pairs + nrow(week) - uniqueN(week, by = c("geoid_o", "geoid_d"))
 
-    total_observed <- total_observed + sum(week$visitor_flows)
+    week_total_observed <- sum(week$visitor_flows)
+    total_observed <- total_observed + week_total_observed
     same_county <- week$geoid_o == week$geoid_d
-    intracounty_observed <- intracounty_observed + sum(week$visitor_flows[same_county])
+    week_intracounty_observed <- sum(week$visitor_flows[same_county])
+    intracounty_observed <- intracounty_observed + week_intracounty_observed
     cross <- week[!same_county]
     cross[, `:=`(
       state_o = unname(state_by_fips[substr(geoid_o, 1, 2)]),
       state_d = unname(state_by_fips[substr(geoid_d, 1, 2)])
     )]
 
-    county_out_parts[[i]] <- cross[, .(value = sum(visitor_flows)), by = .(fips = geoid_o)]
-    county_in_parts[[i]] <- cross[, .(value = sum(visitor_flows)), by = .(fips = geoid_d)]
+    week_county_out <- cross[, .(value = sum(visitor_flows)), by = .(fips = geoid_o)]
+    week_county_in <- cross[, .(value = sum(visitor_flows)), by = .(fips = geoid_d)]
+    county_out_parts[[i]] <- week_county_out
+    county_in_parts[[i]] <- week_county_in
+    county_out_weekly[i, match(week_county_out$fips, geometry_order$fips)] <- week_county_out$value
+    county_in_weekly[i, match(week_county_in$fips, geometry_order$fips)] <- week_county_in$value
 
     same_state <- cross$state_o == cross$state_d
     intrastate <- cross[same_state]
     interstate <- cross[!same_state]
-    intrastate_observed <- intrastate_observed + sum(intrastate$visitor_flows)
-    interstate_observed <- interstate_observed + sum(interstate$visitor_flows)
+    week_intrastate_observed <- sum(intrastate$visitor_flows)
+    week_interstate_observed <- sum(interstate$visitor_flows)
+    intrastate_observed <- intrastate_observed + week_intrastate_observed
+    interstate_observed <- interstate_observed + week_interstate_observed
+
+    pulse_parts[[i]] <- data.table(
+      weekStart = format(weeks$week_start[i], "%Y-%m-%d"),
+      weekEnd = format(week_end, "%Y-%m-%d"),
+      totalObserved = week_total_observed,
+      withinCountyObserved = week_intracounty_observed,
+      intrastateCrossCountyObserved = week_intrastate_observed,
+      interstateObserved = week_interstate_observed,
+      crossCountyObserved = week_intrastate_observed + week_interstate_observed
+    )
 
     intrastate_parts[[i]] <- intrastate[, .(value = sum(visitor_flows)), by = .(state = state_o)]
     interstate_out_parts[[i]] <- interstate[, .(value = sum(visitor_flows)), by = .(state = state_o)]
@@ -281,6 +330,35 @@ build_archive <- function(repo, output, labels) {
   state_interstate_out <- sum_one_key(interstate_out_parts, "state")
   directed <- rbindlist(directed_parts)[, .(value = sum(value)), by = .(source, target)]
   pairs <- rbindlist(pair_parts)[, .(value = sum(value)), by = .(source, target)]
+  pulse <- rbindlist(pulse_parts, use.names = TRUE)
+  pulse[, seasonalWeek := ((seq_len(.N) - 1L) %% 52L) + 1L]
+  baseline_total <- pulse$totalObserved[seq_len(52L)]
+  baseline_within <- pulse$withinCountyObserved[seq_len(52L)]
+  baseline_cross <- pulse$crossCountyObserved[seq_len(52L)]
+  pulse[, `:=`(
+    totalIndex = round(totalObserved / baseline_total[seasonalWeek] * 100, 1),
+    withinCountyIndex = round(withinCountyObserved / baseline_within[seasonalWeek] * 100, 1),
+    crossCountyIndex = round(crossCountyObserved / baseline_cross[seasonalWeek] * 100, 1)
+  )]
+
+  absolute_balance <- abs(county_in_weekly - county_out_weekly)
+  nonzero_balance <- absolute_balance[absolute_balance > 0]
+  balance_cap <- as.numeric(quantile(nonzero_balance, 0.995, names = FALSE, type = 7))
+  inbound_values <- as.vector(t(county_in_weekly))
+  outbound_values <- as.vector(t(county_out_weekly))
+  if (max(c(inbound_values, outbound_values)) > .Machine$integer.max) {
+    stop("A weekly county flow exceeds the UInt32-compatible atlas range", call. = FALSE)
+  }
+  binary_values <- integer(length(inbound_values) * 2L)
+  binary_values[seq.int(1L, length(binary_values), by = 2L)] <- as.integer(round(inbound_values))
+  binary_values[seq.int(2L, length(binary_values), by = 2L)] <- as.integer(round(outbound_values))
+  binary_header <- charToRaw("KANGWEEKLYFLOW01")
+  binary_build_id <- paste(sprintf("%02x", as.integer(binary_header)), collapse = "")
+
+  if (!isTRUE(all.equal(sum(inbound_values), intrastate_observed + interstate_observed)) ||
+      !isTRUE(all.equal(sum(outbound_values), intrastate_observed + interstate_observed))) {
+    stop("Weekly county flow totals do not reconcile with the archive aggregate", call. = FALSE)
+  }
 
   counties <- copy(county_lookup)
   counties[county_in, inbound := i.value, on = "fips"]
@@ -360,10 +438,67 @@ build_archive <- function(repo, output, labels) {
   dir.create(dirname(output), recursive = TRUE, showWarnings = FALSE)
   write_json(result, output, auto_unbox = TRUE, digits = NA, pretty = FALSE, na = "null")
   message("Wrote ", normalizePath(output, mustWork = TRUE))
+
+  dir.create(dirname(binary), recursive = TRUE, showWarnings = FALSE)
+  binary_connection <- file(binary, open = "wb")
+  on.exit(close(binary_connection), add = TRUE)
+  writeBin(binary_header, binary_connection)
+  writeBin(binary_values, binary_connection, size = 4L, endian = "little")
+  close(binary_connection)
+  on.exit(NULL, add = FALSE)
+
+  dynamics_result <- list(
+    version = 1L,
+    buildId = binary_build_id,
+    binaryHeaderBytes = length(binary_header),
+    binaryBytes = as.numeric(file.info(binary)$size),
+    fieldCount = 2L,
+    fields = c("inbound", "outbound"),
+    layout = "week-major, then county map order, then inbound/outbound UInt32 little-endian",
+    weekCount = nrow(pulse),
+    countyCount = length(geometry_order$fips),
+    coverageStart = format(coverage_start, "%Y-%m-%d"),
+    coverageEnd = format(coverage_end, "%Y-%m-%d"),
+    geometryBuildId = geometry_order$build_id,
+    balanceCap = balance_cap,
+    pulseBaseline = "Each week is indexed to the corresponding ordinal week in the 52-week 2019 archive; 2019 = 100.",
+    pulse = pulse,
+    methodology = list(
+      countyFields = "Weekly inbound and outbound cross-county detected visitor observations; within-county observations are excluded.",
+      balance = "Net balance equals inbound minus outbound. Map color uses a signed log scale capped at the archive-wide 99.5th percentile of absolute weekly county balance.",
+      caveat = "Movement observations are not unique individuals and do not identify transportation mode. Associations with reported incidence are descriptive, not causal."
+    ),
+    sources = list(
+      repository = SOURCE_REPOSITORY,
+      methodology = "https://github.com/GeoDS/COVID19USFlows-WeeklyFlows/blob/master/README.md"
+    )
+  )
+  expected_binary_bytes <- length(binary_header) + length(binary_values) * 4
+  if (dynamics_result$binaryBytes != expected_binary_bytes) {
+    stop("Weekly mobility binary size validation failed", call. = FALSE)
+  }
+  dir.create(dirname(dynamics), recursive = TRUE, showWarnings = FALSE)
+  write_json(
+    dynamics_result,
+    dynamics,
+    auto_unbox = TRUE,
+    digits = NA,
+    pretty = FALSE,
+    na = "null"
+  )
+  message("Wrote ", normalizePath(dynamics, mustWork = TRUE))
+  message("Wrote ", normalizePath(binary, mustWork = TRUE))
   invisible(result)
 }
 
 args <- parse_args(commandArgs(trailingOnly = TRUE))
 repo <- ensure_source_repo(args$repo)
-profile <- build_archive(repo, args$output, args$labels)
+profile <- build_archive(
+  repo,
+  args$output,
+  args$labels,
+  args$dynamics,
+  args$binary,
+  args$geometry
+)
 cat(toJSON(list(meta = profile$meta, quality = profile$quality), auto_unbox = TRUE, pretty = TRUE), "\n")
