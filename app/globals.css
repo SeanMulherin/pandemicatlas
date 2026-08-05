@@ -31,7 +31,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 14.5rem;
+  scroll-padding-top: 10rem;
   background: var(--paper);
 }
 
@@ -95,9 +95,8 @@ button {
 /* Masthead */
 
 .site-header {
-  position: sticky;
+  position: relative;
   z-index: 20;
-  top: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -401,7 +400,7 @@ button {
 .explorer-controls {
   position: sticky;
   z-index: 15;
-  top: 4.5rem;
+  top: 0;
   display: grid;
   grid-template-columns: auto auto minmax(20rem, 1fr);
   align-items: end;
@@ -1560,7 +1559,7 @@ button {
 .mobility-control-desk {
   position: sticky;
   z-index: 18;
-  top: 4.5rem;
+  top: 0;
   margin-right: calc(-1 * var(--page-gutter));
   margin-bottom: clamp(3.5rem, 7vw, 7rem);
   margin-left: calc(-1 * var(--page-gutter));

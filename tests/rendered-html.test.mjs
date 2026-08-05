@@ -84,6 +84,14 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   const mobility = JSON.parse(mobilityRaw);
   const mobilityDynamics = JSON.parse(mobilityDynamicsRaw);
   const countyMetadata = JSON.parse(countyMetadataRaw);
+  const firstCssRule = (selector) => {
+    const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return styles.match(new RegExp(`${escapedSelector}\\s*\\{([^}]*)\\}`))?.[1] ?? "";
+  };
+  const headerRule = firstCssRule(".site-header");
+  const explorerControlsRule = firstCssRule(".explorer-controls");
+  const mobilityControlsRule = firstCssRule(".mobility-control-desk");
+  const htmlRule = firstCssRule("html");
 
   assert.match(national, /^date,geoid,cases,cases_avg,cases_avg_per_100k/);
   assert.match(states, /^date,geoid,state,cases,cases_avg,cases_avg_per_100k/);
@@ -92,6 +100,13 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.equal(socialCard.readUInt32BE(16), 1731);
   assert.equal(socialCard.readUInt32BE(20), 909);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
+  assert.match(headerRule, /position:\s*relative/);
+  assert.doesNotMatch(headerRule, /position:\s*sticky|top:\s*0/);
+  assert.match(explorerControlsRule, /position:\s*sticky/);
+  assert.match(explorerControlsRule, /top:\s*0/);
+  assert.match(mobilityControlsRule, /position:\s*sticky/);
+  assert.match(mobilityControlsRule, /top:\s*0/);
+  assert.match(htmlRule, /scroll-padding-top:\s*10rem/);
   assert.match(page, /<CovidAtlas \/>/);
   assert.match(layout, /generateMetadata/);
   assert.match(atlas, /Exploring the US COVID-19 Pandemic/);
