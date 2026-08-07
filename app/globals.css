@@ -1688,6 +1688,23 @@ button {
   line-height: 0.98;
 }
 
+@media (min-width: 50.01rem) {
+  .mobility-section-heading .section-heading-copy h2,
+  .mobility-figure-heading-plain h3 {
+    max-width: none;
+    white-space: nowrap;
+  }
+
+  .mobility-figure-heading-plain > div {
+    width: 100%;
+    max-width: none;
+  }
+
+  .mobility-figure-heading-plain h3 {
+    font-size: clamp(2.2rem, 4.4vw, 4.1rem);
+  }
+}
+
 .mobility-figure-heading p {
   max-width: 48rem;
   margin: 1.1rem 0 0;

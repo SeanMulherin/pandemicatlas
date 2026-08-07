@@ -84,14 +84,32 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   const mobility = JSON.parse(mobilityRaw);
   const mobilityDynamics = JSON.parse(mobilityDynamicsRaw);
   const countyMetadata = JSON.parse(countyMetadataRaw);
-  const firstCssRule = (selector) => {
+  const firstCssRule = (selector, source = styles) => {
     const escapedSelector = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    return styles.match(new RegExp(`${escapedSelector}\\s*\\{([^}]*)\\}`))?.[1] ?? "";
+    return source.match(new RegExp(`${escapedSelector}\\s*\\{([^}]*)\\}`))?.[1] ?? "";
+  };
+  const cssBlockAfter = (source, marker) => {
+    const markerAt = source.indexOf(marker);
+    assert.notEqual(markerAt, -1);
+    const openingBrace = source.indexOf("{", markerAt);
+    let depth = 0;
+    for (let index = openingBrace; index < source.length; index += 1) {
+      if (source[index] === "{") depth += 1;
+      if (source[index] === "}" && --depth === 0) {
+        return source.slice(openingBrace + 1, index);
+      }
+    }
+    assert.fail(`Unclosed CSS block: ${marker}`);
   };
   const headerRule = firstCssRule(".site-header");
   const explorerControlsRule = firstCssRule(".explorer-controls");
   const mobilityControlsRule = firstCssRule(".mobility-control-desk");
   const htmlRule = firstCssRule("html");
+  const baseMobilitySectionTitleRule = firstCssRule(
+    ".mobility-section-heading .section-heading-copy h2",
+  );
+  const baseMobilityFigureTitleRule = firstCssRule(".mobility-figure-heading h3");
+  const wideMobilityCss = cssBlockAfter(styles, "@media (min-width: 50.01rem)");
 
   assert.match(national, /^date,geoid,cases,cases_avg,cases_avg_per_100k/);
   assert.match(states, /^date,geoid,state,cases,cases_avg,cases_avg_per_100k/);
@@ -283,6 +301,22 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityStory, /Mobility at week t is compared with incidence at week t \+ lag/);
   assert.match(mobilityStory, /does not estimate a causal effect/);
   assert.match(styles, /\.mobility-timeline \{/);
+  assert.match(baseMobilitySectionTitleRule, /max-width: 18ch/);
+  assert.match(baseMobilityFigureTitleRule, /max-width: 18ch/);
+  assert.doesNotMatch(baseMobilitySectionTitleRule, /white-space: nowrap/);
+  assert.doesNotMatch(baseMobilityFigureTitleRule, /white-space: nowrap/);
+  assert.match(
+    wideMobilityCss,
+    /\.mobility-section-heading \.section-heading-copy h2,\s*\.mobility-figure-heading-plain h3\s*\{[^}]*max-width: none;[^}]*white-space: nowrap;/,
+  );
+  assert.match(
+    wideMobilityCss,
+    /\.mobility-figure-heading-plain > div \{[^}]*width: 100%;[^}]*max-width: none;/,
+  );
+  assert.match(
+    wideMobilityCss,
+    /\.mobility-figure-heading-plain h3 \{[^}]*font-size: clamp\(2\.2rem, 4\.4vw, 4\.1rem\);/,
+  );
   assert.match(styles, /\.mobility-control-desk \{[\s\S]*?position: sticky;/);
   assert.match(styles, /\.mobility-timeline-slot \{/);
   assert.match(styles, /\.mobility-county-map-canvas/);
