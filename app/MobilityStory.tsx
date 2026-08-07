@@ -102,7 +102,6 @@ interface CanvasDimensions {
   height: number;
 }
 
-type PulseScope = "total" | "within" | "cross";
 type CovidMetric = "cases" | "deaths";
 
 interface MobilityStoryProps {
@@ -119,7 +118,6 @@ const DAY_MS = 86_400_000;
 const INK = "#15191e";
 const INK_FAINT = "#737575";
 const PAPER = "#fffdf7";
-const TEAL = "#006d77";
 const BLUE = "#126785";
 const RED = "#a9363e";
 const GOLD = "#8a5a00";
@@ -128,10 +126,9 @@ const FLOW_FIELDS = 2;
 
 /*
   Mobility chart map:
-  1. Trend — indexed weekly national pulse, 156 points, one selected movement scope.
-  2. Signed geography — weekly county net balance, blue inbound / red outbound.
-  3. Trend — selected county weekly inbound and outbound observations.
-  4. Relationship — cross-county mobility at t versus national incidence at t + lag.
+  1. Signed geography — weekly county net balance, blue inbound / red outbound.
+  2. Trend — selected county weekly inbound and outbound observations.
+  3. Relationship — cross-county mobility at t versus national incidence at t + lag.
 */
 
 const compactFormatter = new Intl.NumberFormat("en-US", {
@@ -295,183 +292,6 @@ function MobilityTimelineControls({
         <span aria-hidden="true">{pulse[0]?.weekStart.slice(0, 4)}</span>
         <span aria-hidden="true">{pulse.at(-1)?.weekEnd.slice(0, 4)}</span>
       </label>
-    </div>
-  );
-}
-
-function pulseValue(row: PulseRow, scope: PulseScope): number {
-  if (scope === "within") return row.withinCountyIndex;
-  if (scope === "cross") return row.crossCountyIndex;
-  return row.totalIndex;
-}
-
-function pulseObserved(row: PulseRow, scope: PulseScope): number {
-  if (scope === "within") return row.withinCountyObserved;
-  if (scope === "cross") return row.crossCountyObserved;
-  return row.totalObserved;
-}
-
-function pulseScopeLabel(scope: PulseScope): string {
-  if (scope === "within") return "Within-county movement";
-  if (scope === "cross") return "Cross-county movement";
-  return "All observed movement";
-}
-
-function NationalMobilityPulse({
-  pulse,
-  scope,
-  weekIndex,
-  onScope,
-  onWeekIndex,
-}: {
-  pulse: PulseRow[];
-  scope: PulseScope;
-  weekIndex: number;
-  onScope: (scope: PulseScope) => void;
-  onWeekIndex: (index: number) => void;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const dimensions = useCanvasDimensions(canvasRef);
-  const values = useMemo(() => pulse.map((row) => pulseValue(row, scope)), [pulse, scope]);
-  const maximum = Math.max(125, ...values);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const context = prepareCanvas(canvas, dimensions);
-    if (!context) return;
-    const margin = { top: 25, right: 24, bottom: 40, left: 54 };
-    const width = Math.max(1, dimensions.width - margin.left - margin.right);
-    const height = Math.max(1, dimensions.height - margin.top - margin.bottom);
-    const yMaximum = Math.ceil(maximum / 25) * 25;
-    const xFor = (index: number) => margin.left + (index / Math.max(1, pulse.length - 1)) * width;
-    const yFor = (value: number) => margin.top + (1 - value / yMaximum) * height;
-
-    context.fillStyle = PAPER;
-    context.fillRect(0, 0, dimensions.width, dimensions.height);
-    context.font = "9px SFMono-Regular, Consolas, monospace";
-    context.textAlign = "right";
-    context.textBaseline = "middle";
-    for (let value = 0; value <= yMaximum; value += 25) {
-      const y = yFor(value);
-      context.strokeStyle = value === 100 ? "rgba(21, 25, 30, 0.55)" : RULE;
-      context.setLineDash(value === 100 ? [5, 5] : []);
-      context.beginPath();
-      context.moveTo(margin.left, y);
-      context.lineTo(margin.left + width, y);
-      context.stroke();
-      context.fillStyle = INK_FAINT;
-      context.fillText(`${value}`, margin.left - 8, y);
-    }
-    context.setLineDash([]);
-
-    context.beginPath();
-    values.forEach((value, index) => {
-      const x = xFor(index);
-      const y = yFor(value);
-      if (index === 0) context.moveTo(x, y);
-      else context.lineTo(x, y);
-    });
-    context.strokeStyle = TEAL;
-    context.lineWidth = 2.5;
-    context.stroke();
-
-    const selectedX = xFor(weekIndex);
-    const selectedY = yFor(values[weekIndex] ?? 0);
-    context.strokeStyle = "rgba(169, 54, 62, 0.5)";
-    context.lineWidth = 1;
-    context.beginPath();
-    context.moveTo(selectedX, margin.top);
-    context.lineTo(selectedX, margin.top + height);
-    context.stroke();
-    context.beginPath();
-    context.arc(selectedX, selectedY, 5.5, 0, Math.PI * 2);
-    context.fillStyle = RED;
-    context.fill();
-
-    context.fillStyle = INK_FAINT;
-    context.textAlign = "left";
-    context.textBaseline = "top";
-    context.fillText(pulse[0]?.weekStart.slice(0, 4) ?? "", margin.left, margin.top + height + 12);
-    context.textAlign = "right";
-    context.fillText(pulse.at(-1)?.weekEnd.slice(0, 4) ?? "", margin.left + width, margin.top + height + 12);
-  }, [dimensions, maximum, pulse, values, weekIndex]);
-
-  const updateFromPointer = (event: ReactPointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    onWeekIndex(pointerIndex(event, canvas, pulse.length, 54, 24));
-  };
-
-  const handleKeyDown = (event: ReactKeyboardEvent<HTMLCanvasElement>) => {
-    if (event.key === "ArrowRight" || event.key === "ArrowUp") {
-      event.preventDefault();
-      onWeekIndex(Math.min(pulse.length - 1, weekIndex + 1));
-    } else if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
-      event.preventDefault();
-      onWeekIndex(Math.max(0, weekIndex - 1));
-    } else if (event.key === "Home") {
-      event.preventDefault();
-      onWeekIndex(0);
-    } else if (event.key === "End") {
-      event.preventDefault();
-      onWeekIndex(pulse.length - 1);
-    }
-  };
-
-  const active = pulse[weekIndex];
-  return (
-    <div className="mobility-pulse-grid">
-      <div className="mobility-canvas-shell">
-        <div className="mobility-scope-controls" role="group" aria-label="Mobility pulse scope">
-          {(["total", "within", "cross"] as const).map((option) => (
-            <button
-              key={option}
-              type="button"
-              aria-pressed={scope === option}
-              onClick={() => onScope(option)}
-            >
-              {option === "total" ? "All movement" : option === "within" ? "Within county" : "Cross-county"}
-            </button>
-          ))}
-        </div>
-        <canvas
-          ref={canvasRef}
-          className="mobility-pulse-canvas"
-          role="img"
-          tabIndex={0}
-          aria-label={`${pulseScopeLabel(scope)} by week, indexed to the corresponding 2019 week. Click, drag, or use arrow keys to inspect weeks.`}
-          onPointerDown={(event) => {
-            event.currentTarget.setPointerCapture(event.pointerId);
-            updateFromPointer(event);
-          }}
-          onPointerMove={(event) => {
-            if (event.currentTarget.hasPointerCapture(event.pointerId)) updateFromPointer(event);
-          }}
-          onKeyDown={handleKeyDown}
-        >
-          Weekly {pulseScopeLabel(scope)} indexed to 2019.
-        </canvas>
-        <div className="mobility-chart-key" aria-hidden="true">
-          <span><i className="is-teal" />Weekly mobility index</span>
-          <span><i className="is-dashed" />Corresponding 2019 week = 100</span>
-          <span><i className="is-red" />Selected week</span>
-        </div>
-      </div>
-      <aside className="mobility-detail-panel" aria-live="polite">
-        <span className="mobility-detail-label">{pulseScopeLabel(scope)}</span>
-        <h4>{(active ? pulseValue(active, scope) : 0).toFixed(1)}</h4>
-        <p className="mobility-detail-state">2019 baseline = 100</p>
-        <dl>
-          <div><dt>Selected week</dt><dd>{active ? formatCompact(pulseObserved(active, scope)) : "—"}</dd></div>
-          <div><dt>Within county</dt><dd>{active ? formatCompact(active.withinCountyObserved) : "—"}</dd></div>
-          <div><dt>Cross-county</dt><dd>{active ? formatCompact(active.crossCountyObserved) : "—"}</dd></div>
-        </dl>
-        <small className="mobility-detail-note">
-          The index compares each week with the corresponding ordinal week in the 2019 archive.
-          It describes detected visitor observations, not unique travelers.
-        </small>
-      </aside>
     </div>
   );
 }
@@ -1106,7 +926,6 @@ export default function MobilityStory({
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [weekIndex, setWeekIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [pulseScope, setPulseScope] = useState<PulseScope>("cross");
   const [selectedFips, setSelectedFips] = useState(counties[0]?.fips ?? "");
   const [lagWeeks, setLagWeeks] = useState(2);
 
@@ -1227,9 +1046,9 @@ export default function MobilityStory({
         <article className="mobility-figure mobility-dynamic-figure" ref={firstFigureRef}>
           <div className="mobility-figure-heading mobility-figure-heading-plain">
             <div>
-              <h3>National Mobility Pulse</h3>
+              <h3>Animated County Flow Map</h3>
               <p>
-                Weekly detected movement compared with the corresponding week in the 2019 archive.
+                Weekly county movement is loading for the animated map.
               </p>
             </div>
           </div>
@@ -1258,25 +1077,6 @@ export default function MobilityStory({
     <>
       {timelinePortal}
       <article className="mobility-figure mobility-dynamic-figure" ref={firstFigureRef}>
-        <div className="mobility-figure-heading mobility-figure-heading-plain">
-          <div>
-            <h3>National Mobility Pulse</h3>
-            <p>
-              Weekly detected movement compared with the corresponding ordinal week in the
-              2019 archive. Switch scope to distinguish within-county from cross-county activity.
-            </p>
-          </div>
-        </div>
-        <NationalMobilityPulse
-          pulse={assets.metadata.pulse}
-          scope={pulseScope}
-          weekIndex={weekIndex}
-          onScope={setPulseScope}
-          onWeekIndex={setWeekIndex}
-        />
-      </article>
-
-      <article className="mobility-figure mobility-dynamic-figure">
         <div className="mobility-figure-heading mobility-figure-heading-plain mobility-heading-with-date">
           <div>
             <h3>Animated County Flow Map</h3>

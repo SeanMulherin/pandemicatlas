@@ -243,16 +243,24 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityAtlas, /<MobilityStory/);
   assert.ok(
     mobilityAtlas.indexOf("Which counties pulled travel in—or pushed it out")
+      < mobilityAtlas.indexOf('className="mobility-control-desk"'),
+  );
+  assert.ok(
+    mobilityAtlas.indexOf('className="mobility-control-desk"')
       < mobilityAtlas.indexOf("<MobilityStory"),
   );
   assert.match(mobilityAtlas, /not unique individuals/);
   assert.doesNotMatch(mobilityAtlas, /05<\/span> Human mobility|01 \/ Interstate network|02 \/ County hubs/);
   const mobilityStoryTitles = [
-    "National Mobility Pulse",
     "Animated County Flow Map",
     "County Mobility Spotlight",
     "Mobility–Incidence Lag Explorer",
   ];
+  assert.doesNotMatch(
+    mobilityStory,
+    /National Mobility Pulse|NationalMobilityPulse|mobility-pulse-|mobility-scope-controls/,
+  );
+  assert.doesNotMatch(styles, /\.mobility-pulse-(?:grid|canvas)\b|\.mobility-scope-controls\b/);
   mobilityStoryTitles.forEach((title) => assert.match(mobilityStory, new RegExp(title)));
   mobilityStoryTitles.slice(1).forEach((title, index) => {
     assert.ok(mobilityStory.indexOf(mobilityStoryTitles[index]) < mobilityStory.indexOf(title));
@@ -260,8 +268,11 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.equal(mobilityStory.match(/aria-label="Weekly mobility animation controls"/g)?.length, 1);
   assert.match(mobilityStory, /createPortal/);
   assert.match(mobilityStory, /timelineHost/);
-  assert.match(mobilityAtlas, /className="mobility-control-desk"/);
-  assert.match(mobilityAtlas, /className="mobility-timeline-slot" ref=\{setTimelineHost\}/);
+  assert.equal(mobilityAtlas.match(/className="mobility-control-desk"/g)?.length, 1);
+  assert.equal(
+    mobilityAtlas.match(/className="mobility-timeline-slot" ref=\{setTimelineHost\}/g)?.length,
+    1,
+  );
   assert.ok(
     mobilityAtlas.indexOf('className="mobility-control-row"')
       < mobilityAtlas.indexOf('className="mobility-timeline-slot"'),

@@ -685,27 +685,6 @@ export default function MobilityAtlas({
         </div>
       </div>
 
-      <div className="mobility-control-desk" role="group" aria-label="Mobility explorer controls">
-        <div className="mobility-control-row">
-          <label htmlFor="mobility-state-focus">
-            <span>State focus</span>
-            <select
-              id="mobility-state-focus"
-              value={focusState}
-              onChange={(event) => setFocusState(event.target.value)}
-            >
-              <option>{ALL_STATES}</option>
-              {stateNames.map((state) => <option key={state}>{state}</option>)}
-            </select>
-          </label>
-          <p>Click a state in the wheel to coordinate both views.</p>
-          {focusState !== ALL_STATES && (
-            <button type="button" onClick={() => setFocusState(ALL_STATES)}>Reset focus</button>
-          )}
-        </div>
-        <div className="mobility-timeline-slot" ref={setTimelineHost} />
-      </div>
-
       <article className="mobility-figure">
         <div className="mobility-figure-heading mobility-figure-heading-plain">
           <div>
@@ -738,6 +717,27 @@ export default function MobilityAtlas({
         <CountyBalance counties={data.counties} focusState={focusState} />
       </article>
 
+      <div className="mobility-control-desk" role="group" aria-label="Mobility explorer controls">
+        <div className="mobility-control-row">
+          <label htmlFor="mobility-state-focus">
+            <span>State focus</span>
+            <select
+              id="mobility-state-focus"
+              value={focusState}
+              onChange={(event) => setFocusState(event.target.value)}
+            >
+              <option>{ALL_STATES}</option>
+              {stateNames.map((state) => <option key={state}>{state}</option>)}
+            </select>
+          </label>
+          <p>Click a state in the wheel to coordinate both views.</p>
+          {focusState !== ALL_STATES && (
+            <button type="button" onClick={() => setFocusState(ALL_STATES)}>Reset focus</button>
+          )}
+        </div>
+        <div className="mobility-timeline-slot" ref={setTimelineHost} />
+      </div>
+
       <MobilityStory
         counties={data.counties}
         focusState={focusState}
@@ -752,7 +752,7 @@ export default function MobilityAtlas({
           *These figures use detected visitor flows rather than population-inferred estimates.
           Counts are movement observations, not unique individuals. The first two figures
           aggregate all {formatInteger(data.meta.sourceFileCount)} published weekly county files;
-          the four figures below them retain the weekly sequence from those same files.
+          the three figures below them retain the weekly sequence from those same files.
         </p>
         <p>
           Kang’s daily county release ends Apr. 15, 2021, but its weekly county release continues

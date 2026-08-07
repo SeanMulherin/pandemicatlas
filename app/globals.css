@@ -1560,8 +1560,9 @@ button {
   position: sticky;
   z-index: 18;
   top: 0;
+  margin-top: clamp(5rem, 10vw, 9rem);
   margin-right: calc(-1 * var(--page-gutter));
-  margin-bottom: clamp(3.5rem, 7vw, 7rem);
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
   margin-left: calc(-1 * var(--page-gutter));
   border: 1px solid var(--ink);
   background: var(--ink);
@@ -1950,7 +1951,6 @@ button {
   cursor: ew-resize;
 }
 
-.mobility-pulse-grid,
 .mobility-lag-grid {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(14rem, 0.9fr);
@@ -1958,7 +1958,6 @@ button {
   background: var(--paper-light);
 }
 
-.mobility-pulse-canvas,
 .mobility-county-map-canvas,
 .mobility-spotlight-canvas,
 .mobility-lag-canvas {
@@ -1966,10 +1965,6 @@ button {
   width: 100%;
   cursor: crosshair;
   touch-action: pan-y;
-}
-
-.mobility-pulse-canvas {
-  height: clamp(23rem, 38vw, 31rem);
 }
 
 .mobility-county-map-canvas {
@@ -1980,31 +1975,6 @@ button {
 .mobility-spotlight-canvas,
 .mobility-lag-canvas {
   height: clamp(24rem, 40vw, 33rem);
-}
-
-.mobility-scope-controls {
-  display: flex;
-  border-bottom: 1px solid var(--ink);
-}
-
-.mobility-scope-controls button {
-  min-height: 2.7rem;
-  padding: 0.55rem 0.9rem;
-  border: 0;
-  border-right: 1px solid var(--rule);
-  border-radius: 0;
-  background: transparent;
-  color: var(--ink-soft);
-  font-size: 0.61rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.mobility-scope-controls button[aria-pressed="true"] {
-  background: var(--ink);
-  color: var(--paper-light);
 }
 
 .mobility-detail-note {
@@ -2445,7 +2415,6 @@ button {
   }
 
   .mobility-figure-grid,
-  .mobility-pulse-grid,
   .mobility-lag-grid {
     grid-template-columns: minmax(0, 2.35fr) minmax(13rem, 1fr);
   }
@@ -2736,7 +2705,6 @@ button {
   }
 
   .mobility-figure-grid,
-  .mobility-pulse-grid,
   .mobility-lag-grid {
     grid-template-columns: 1fr;
   }
@@ -2982,18 +2950,6 @@ button {
     font-size: 0.9rem;
   }
 
-  .mobility-scope-controls {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .mobility-scope-controls button {
-    padding-right: 0.35rem;
-    padding-left: 0.35rem;
-    font-size: 0.52rem;
-  }
-
-  .mobility-pulse-canvas,
   .mobility-spotlight-canvas,
   .mobility-lag-canvas {
     height: 22rem;
