@@ -193,6 +193,8 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     ".mobility-section-heading .section-heading-copy h2",
   );
   const baseMobilityFigureTitleRule = firstCssRule(".mobility-figure-heading h3");
+  const mobilityTimelineReadoutRule = firstCssRule(".mobility-timeline-readout");
+  const mobilityTimelineValueRule = firstCssRule(".mobility-timeline-readout strong");
   const wideMobilityCss = cssBlockAfter(styles, "@media (min-width: 50.01rem)");
   const narrowMobilityCss = cssBlockAfter(styles, "@media (max-width: 50rem)");
   const phoneCss = cssBlockAfter(styles, "@media (max-width: 34rem)");
@@ -283,11 +285,15 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /<CountyIncidenceMap/);
   assert.match(atlas, /const explorerControlsRef = useRef<HTMLDivElement>\(null\)/);
   assert.match(atlas, /const updateExplorerControlHandoff = useCallback/);
-  assert.match(atlas, /Math\.max\(0, controlsHeight - mobilityTop\)/);
+  assert.match(atlas, /Math\.max\(0, controlsHeight - mobilitySectionTop\)/);
+  assert.match(
+    atlas,
+    /window\.getComputedStyle\(controls\)\.position !== "sticky"/,
+  );
   assert.match(atlas, /style\.setProperty\("--explorer-handoff-offset"/);
   assert.match(atlas, /classList\.toggle\("is-displaced"/);
   assert.match(atlas, /ref=\{explorerControlsRef\} className="explorer-controls"/);
-  assert.match(atlas, /onControlPositionChange=\{updateExplorerControlHandoff\}/);
+  assert.match(atlas, /onSectionPositionChange=\{updateExplorerControlHandoff\}/);
   assert.doesNotMatch(atlas, /Burden ranks states by the active metric and view/);
   assert.doesNotMatch(atlas, /floating-playback|is-handoff-hidden|pendingHandoffFocusRef|showFloatingPlayback|timeConsoleRef/);
   assert.ok(atlas.indexOf('className="explorer-controls"') < atlas.indexOf('className="time-console"'));
@@ -446,13 +452,10 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityAtlas, /<MobilityStory/);
   assert.match(
     mobilityAtlas,
-    /const mobilityControlDeskRef = useRef<HTMLDivElement>\(null\)/,
+    /const mobilitySectionRef = useRef<HTMLElement>\(null\)/,
   );
-  assert.match(
-    mobilityAtlas,
-    /window\.getComputedStyle\(desk\)\.position !== "sticky"/,
-  );
-  assert.match(mobilityAtlas, /desk\.getBoundingClientRect\(\)\.top/);
+  assert.match(mobilityAtlas, /section\.getBoundingClientRect\(\)\.top/);
+  assert.doesNotMatch(mobilityAtlas, /desk\.getBoundingClientRect\(\)\.top/);
   assert.match(mobilityAtlas, /window\.requestAnimationFrame\(updatePosition\)/);
   assert.match(
     mobilityAtlas,
@@ -461,8 +464,17 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityAtlas, /new ResizeObserver\(scheduleUpdate\)/);
   assert.match(
     mobilityAtlas,
-    /className="mobility-control-desk" ref=\{mobilityControlDeskRef\}/,
+    /layoutObserver\?\.observe\(mobilitySectionRef\.current\)/,
   );
+  assert.match(
+    mobilityAtlas,
+    /className="atlas-section mobility-section" id="mobility" ref=\{mobilitySectionRef\}/,
+  );
+  assert.equal(
+    mobilityAtlas.match(/className="atlas-section mobility-section" id="mobility" ref=\{mobilitySectionRef\}/g)?.length,
+    2,
+  );
+  assert.match(mobilityAtlas, /className="mobility-control-desk"/);
   assert.doesNotMatch(mobilityAtlas, /mobility-sticky-sentinel/);
   assert.ok(
     mobilityAtlas.indexOf("Which counties pulled travel in—or pushed it out")
@@ -576,6 +588,9 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     /\.mobility-control-desk\s*\{[^}]*position:\s*relative;[^}]*top:\s*auto;/,
   );
   assert.match(styles, /\.mobility-timeline-slot \{/);
+  assert.match(mobilityTimelineReadoutRule, /min-width:\s*0/);
+  assert.match(mobilityTimelineValueRule, /min-block-size:\s*2\.2em/);
+  assert.match(mobilityTimelineValueRule, /color:\s*#000/);
   assert.match(
     styles,
     /(?:^|\n)\.mobility-timeline\s*\{[^}]*grid-template-columns:\s*auto minmax\(10rem, 0\.38fr\) minmax\(0, 1\.62fr\)/,

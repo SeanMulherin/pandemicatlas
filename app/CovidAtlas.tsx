@@ -728,10 +728,13 @@ export function CovidAtlas() {
   ]);
   const [selectionMessage, setSelectionMessage] = useState("");
 
-  const updateExplorerControlHandoff = useCallback((mobilityTop: number | null) => {
+  const updateExplorerControlHandoff = useCallback((mobilitySectionTop: number | null) => {
     const controls = explorerControlsRef.current;
     if (!controls) return;
-    if (mobilityTop === null) {
+    if (
+      mobilitySectionTop === null
+      || window.getComputedStyle(controls).position !== "sticky"
+    ) {
       controls.style.removeProperty("--explorer-handoff-offset");
       controls.classList.remove("is-displaced");
       return;
@@ -740,7 +743,7 @@ export function CovidAtlas() {
     const controlsHeight = controls.getBoundingClientRect().height;
     const displacement = Math.min(
       controlsHeight,
-      Math.max(0, controlsHeight - mobilityTop),
+      Math.max(0, controlsHeight - mobilitySectionTop),
     );
     controls.style.setProperty("--explorer-handoff-offset", `${-displacement}px`);
     controls.classList.toggle("is-displaced", displacement >= controlsHeight - 0.5);
@@ -1149,7 +1152,7 @@ export function CovidAtlas() {
       <MobilityAtlas
         covidSeries={data.national}
         covidMetric={metric}
-        onControlPositionChange={updateExplorerControlHandoff}
+        onSectionPositionChange={updateExplorerControlHandoff}
       />
 
       <section className="methodology-section" id="methodology">

@@ -597,13 +597,13 @@ function CountyBalance({
 export default function MobilityAtlas({
   covidSeries,
   covidMetric,
-  onControlPositionChange,
+  onSectionPositionChange,
 }: {
   covidSeries: MobilityCovidDatum[];
   covidMetric: "cases" | "deaths";
-  onControlPositionChange: (mobilityTop: number | null) => void;
+  onSectionPositionChange: (sectionTop: number | null) => void;
 }) {
-  const mobilityControlDeskRef = useRef<HTMLDivElement>(null);
+  const mobilitySectionRef = useRef<HTMLElement>(null);
   const [data, setData] = useState<MobilityData | null>(null);
   const [error, setError] = useState("");
   const [focusState, setFocusState] = useState(ALL_STATES);
@@ -614,12 +614,12 @@ export default function MobilityAtlas({
 
     const updatePosition = () => {
       animationFrame = 0;
-      const desk = mobilityControlDeskRef.current;
-      if (!desk || window.getComputedStyle(desk).position !== "sticky") {
-        onControlPositionChange(null);
+      const section = mobilitySectionRef.current;
+      if (!section) {
+        onSectionPositionChange(null);
         return;
       }
-      onControlPositionChange(Math.max(0, desk.getBoundingClientRect().top));
+      onSectionPositionChange(Math.max(0, section.getBoundingClientRect().top));
     };
 
     const scheduleUpdate = () => {
@@ -630,18 +630,18 @@ export default function MobilityAtlas({
     scheduleUpdate();
     window.addEventListener("scroll", scheduleUpdate, { passive: true });
     window.addEventListener("resize", scheduleUpdate);
-    const deskObserver = typeof ResizeObserver === "undefined"
+    const layoutObserver = typeof ResizeObserver === "undefined"
       ? null
       : new ResizeObserver(scheduleUpdate);
-    if (mobilityControlDeskRef.current) deskObserver?.observe(mobilityControlDeskRef.current);
+    if (mobilitySectionRef.current) layoutObserver?.observe(mobilitySectionRef.current);
     return () => {
       if (animationFrame) window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleUpdate);
-      deskObserver?.disconnect();
-      onControlPositionChange(null);
+      layoutObserver?.disconnect();
+      onSectionPositionChange(null);
     };
-  }, [data, onControlPositionChange]);
+  }, [data, onSectionPositionChange]);
 
   useEffect(() => {
     let cancelled = false;
@@ -668,7 +668,7 @@ export default function MobilityAtlas({
 
   if (!data) {
     return (
-      <section className="atlas-section mobility-section" id="mobility">
+      <section className="atlas-section mobility-section" id="mobility" ref={mobilitySectionRef}>
         <div className="section-heading mobility-section-heading">
           <div className="section-heading-copy">
             <h2>Human Mobility Patterns</h2>
@@ -691,7 +691,7 @@ export default function MobilityAtlas({
     + data.quality.countyLabelConflicts;
 
   return (
-    <section className="atlas-section mobility-section" id="mobility">
+    <section className="atlas-section mobility-section" id="mobility" ref={mobilitySectionRef}>
       <div className="section-heading mobility-section-heading">
         <div className="section-heading-copy">
           <h2>Human Mobility Patterns</h2>
@@ -754,7 +754,7 @@ export default function MobilityAtlas({
         <CountyBalance counties={data.counties} focusState={focusState} />
       </article>
 
-      <div className="mobility-control-desk" ref={mobilityControlDeskRef}>
+      <div className="mobility-control-desk">
         <div className="mobility-timeline-slot" ref={setTimelineHost} />
       </div>
 
