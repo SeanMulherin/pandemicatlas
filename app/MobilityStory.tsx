@@ -265,6 +265,8 @@ function MobilityTimelineControls({
   onTogglePlayback: () => void;
 }) {
   const activeWeek = pulse[weekIndex];
+  const startDate = pulse[0]?.weekStart;
+  const endDate = pulse.at(-1)?.weekEnd;
   return (
     <div className="mobility-timeline" role="group" aria-label="Weekly mobility animation controls">
       <button
@@ -279,19 +281,25 @@ function MobilityTimelineControls({
         <span>Viewing week</span>
         <strong>{activeWeek ? formatWeek(activeWeek) : ""}</strong>
       </div>
-      <label>
-        <span className="sr-only">Mobility week</span>
+      <div className="mobility-timeline-range">
+        <time dateTime={startDate}>
+          <span className="sr-only">Archive start: </span>
+          {startDate ? weekFormatter.format(new Date(`${startDate}T00:00:00Z`)) : ""}
+        </time>
         <input
           type="range"
+          aria-label="Mobility week"
           min={0}
           max={Math.max(0, pulse.length - 1)}
           value={weekIndex}
           onChange={(event) => onWeekIndex(Number(event.target.value))}
           aria-valuetext={activeWeek ? formatWeek(activeWeek) : ""}
         />
-        <span aria-hidden="true">{pulse[0]?.weekStart.slice(0, 4)}</span>
-        <span aria-hidden="true">{pulse.at(-1)?.weekEnd.slice(0, 4)}</span>
-      </label>
+        <time dateTime={endDate}>
+          <span className="sr-only">Archive end: </span>
+          {endDate ? weekFormatter.format(new Date(`${endDate}T00:00:00Z`)) : ""}
+        </time>
+      </div>
     </div>
   );
 }

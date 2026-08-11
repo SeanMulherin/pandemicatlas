@@ -855,6 +855,7 @@ button {
 }
 
 .state-map-shape:hover,
+.state-map-shape:focus,
 .state-map-shape:focus-visible {
   outline: none;
   filter: brightness(0.9);
@@ -1621,8 +1622,7 @@ button {
 .mobility-ledger span,
 .mobility-detail-label,
 .mobility-list-label,
-.mobility-figure-heading > span,
-.mobility-control-row label > span {
+.mobility-figure-heading > span {
   color: var(--ink-faint);
   font-family: var(--mono);
   font-size: 0.59rem;
@@ -1663,67 +1663,9 @@ button {
   color: var(--paper-light);
 }
 
-.mobility-control-row {
-  display: flex;
-  align-items: end;
-  gap: 1rem;
-  padding: 1rem var(--page-gutter);
-}
-
-.mobility-control-row label {
-  display: grid;
-  flex: 0 1 22rem;
-  gap: 0.4rem;
-}
-
-.mobility-control-row label > span {
-  color: rgba(255, 253, 247, 0.62);
-}
-
-.mobility-control-row select {
-  width: 100%;
-  min-height: 2.65rem;
-  padding: 0.5rem 2.4rem 0.5rem 0.8rem;
-  border: 1px solid rgba(255, 253, 247, 0.55);
-  border-radius: 0;
-  background: var(--paper-light);
-  color: var(--ink);
-  font-family: var(--sans);
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.mobility-control-row p {
-  flex: 1;
-  margin: 0 0 0.55rem;
-  color: rgba(255, 253, 247, 0.66);
-  font-family: var(--mono);
-  font-size: 0.59rem;
-  line-height: 1.5;
-}
-
-.mobility-control-row button {
-  min-height: 2.65rem;
-  padding: 0.55rem 0.8rem;
-  border: 1px solid rgba(255, 253, 247, 0.55);
-  border-radius: 0;
-  background: transparent;
-  color: var(--paper-light);
-  font-size: 0.62rem;
-  font-weight: 800;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.mobility-control-row button:hover {
-  background: var(--paper-light);
-  color: var(--ink);
-}
-
 .mobility-timeline-slot {
   min-height: 4.55rem;
-  padding: 0 var(--page-gutter) 1rem;
+  padding: 1rem var(--page-gutter);
 }
 
 .mobility-timeline-slot .mobility-timeline {
@@ -1992,7 +1934,7 @@ button {
 
 .mobility-timeline {
   display: grid;
-  grid-template-columns: auto minmax(12rem, 0.55fr) minmax(18rem, 1fr);
+  grid-template-columns: auto minmax(10rem, 0.38fr) minmax(0, 1.62fr);
   margin-bottom: 1.5rem;
   border: 1px solid var(--ink);
   background: var(--paper-light);
@@ -2048,15 +1990,20 @@ button {
   line-height: 1.1;
 }
 
-.mobility-timeline > label {
+.mobility-timeline-range {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: max-content minmax(8rem, 1fr) max-content;
   gap: 0.7rem;
   align-items: center;
   padding: 0.8rem 1.1rem;
   color: var(--ink-faint);
   font-family: var(--mono);
   font-size: 0.55rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.mobility-timeline-range time {
+  white-space: nowrap;
 }
 
 .mobility-timeline input,
@@ -2804,22 +2751,9 @@ button {
     border-bottom: 0;
   }
 
-  .mobility-control-row {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
   .mobility-control-desk {
     position: relative;
     top: auto;
-  }
-
-  .mobility-control-row label {
-    flex-basis: auto;
-  }
-
-  .mobility-control-row p {
-    margin: 0;
   }
 
   .mobility-figure-heading,
@@ -2846,7 +2780,7 @@ button {
     grid-template-columns: auto minmax(0, 1fr);
   }
 
-  .mobility-timeline > label {
+  .mobility-timeline-range {
     grid-row: 2;
     grid-column: 1 / -1;
     border-top: 1px solid var(--rule);
@@ -3076,6 +3010,12 @@ button {
 
   .mobility-timeline-readout strong {
     font-size: 0.9rem;
+  }
+
+  .mobility-timeline-range {
+    grid-template-columns: max-content minmax(4rem, 1fr) max-content;
+    gap: 0.45rem;
+    font-size: 0.49rem;
   }
 
   .mobility-spotlight-canvas,

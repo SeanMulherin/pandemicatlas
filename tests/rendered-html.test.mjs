@@ -253,8 +253,18 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(stateMap, /aria-pressed=\{isSelected\}/);
   assert.match(stateMap, /event\.key !== "Enter" && event\.key !== " "/);
   assert.match(stateMap, /onClick=\{\(\) => onToggleState\(state\.name\)\}/);
+  assert.match(stateMap, /onFocus=\{\(\) => setFocusedState\(state\.name\)\}/);
+  assert.match(stateMap, /className="state-map-focus-outline"/);
   assert.doesNotMatch(stateMap, /detailSelected|Remove from comparison|Add to comparison/);
   assert.doesNotMatch(styles, /\.state-map-detail\s*>\s*button\s*\{/);
+  assert.match(
+    styles,
+    /\.state-map-shape:hover,\s*\.state-map-shape:focus,\s*\.state-map-shape:focus-visible\s*\{[^}]*outline:\s*none;/,
+  );
+  assert.match(
+    styles,
+    /\.state-map-focus-outline path\s*\{[^}]*stroke:\s*var\(--ink\);[^}]*stroke-width:\s*2;/,
+  );
   assert.match(stateMapSvgRule, /width:\s*100%/);
   assert.doesNotMatch(styles, /\.tile-map\s*\{|\.state-tile(?:\s|:|\.)/);
   assert.match(atlas, /Statewide Rankings/);
@@ -324,6 +334,11 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(countyMap, /isCountyArrowKey\(event\.key\)/);
   assert.match(countyMap, /candidate\.region !== origin\.region/);
   assert.match(countyMap, /perpendicular > forward/);
+  assert.match(countyMap, /context\.isPointInPath\(paths\.counties\[candidateIndex\], mapX, mapY\)/);
+  assert.match(countyMap, /event\.pointerType !== "mouse" && county !== null/);
+  assert.match(countyMap, /pointerInsideMap\s*\? hoveredCounty/);
+  assert.match(countyMap, /Hover or tap to inspect/);
+  assert.doesNotMatch(countyMap, /if \(county !== null\) setSelectedCounty\(county\)/);
   assert.doesNotMatch(
     countyMap,
     /next = \(current \+ 1\) % assets\.metadata\.countyCount|next = \(current - 1 \+ assets\.metadata\.countyCount\)/,
@@ -442,9 +457,19 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     mobilityAtlas.match(/className="mobility-timeline-slot" ref=\{setTimelineHost\}/g)?.length,
     1,
   );
-  assert.ok(
-    mobilityAtlas.indexOf('className="mobility-control-row"')
-      < mobilityAtlas.indexOf('className="mobility-timeline-slot"'),
+  assert.doesNotMatch(mobilityAtlas, /mobility-control-row|mobility-state-focus|Reset focus/);
+  assert.match(mobilityStory, /className="mobility-spotlight-controls"/);
+  assert.match(mobilityStory, /const startDate = pulse\[0\]\?\.weekStart/);
+  assert.match(mobilityStory, /const endDate = pulse\.at\(-1\)\?\.weekEnd/);
+  assert.match(mobilityStory, /className="mobility-timeline-range"/);
+  assert.match(mobilityStory, /aria-label="Mobility week"/);
+  assert.match(
+    mobilityStory,
+    /startDate \? weekFormatter\.format\(new Date\(`\$\{startDate\}T00:00:00Z`\)\) : ""/,
+  );
+  assert.match(
+    mobilityStory,
+    /endDate \? weekFormatter\.format\(new Date\(`\$\{endDate\}T00:00:00Z`\)\) : ""/,
   );
   assert.match(mobilityStory, /mobility-dynamics\.json/);
   assert.match(mobilityStory, /mobility-weekly\.bin/);
@@ -482,6 +507,18 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   );
   assert.match(styles, /\.mobility-control-desk \{[\s\S]*?position: sticky;/);
   assert.match(styles, /\.mobility-timeline-slot \{/);
+  assert.match(
+    styles,
+    /(?:^|\n)\.mobility-timeline\s*\{[^}]*grid-template-columns:\s*auto minmax\(10rem, 0\.38fr\) minmax\(0, 1\.62fr\)/,
+  );
+  assert.match(
+    firstCssRule(".mobility-timeline-range"),
+    /grid-template-columns:\s*max-content minmax\(8rem, 1fr\) max-content/,
+  );
+  assert.match(
+    narrowMobilityCss,
+    /\.mobility-timeline-range\s*\{[^}]*grid-row:\s*2;[^}]*grid-column:\s*1 \/ -1;/,
+  );
   assert.match(styles, /\.mobility-county-map-canvas/);
   assert.match(styles, /\.mobility-lag-canvas/);
   assert.match(mobilityBuild, /county_in_weekly/);

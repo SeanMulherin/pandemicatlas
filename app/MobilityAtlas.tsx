@@ -717,24 +717,7 @@ export default function MobilityAtlas({
         <CountyBalance counties={data.counties} focusState={focusState} />
       </article>
 
-      <div className="mobility-control-desk" role="group" aria-label="Mobility explorer controls">
-        <div className="mobility-control-row">
-          <label htmlFor="mobility-state-focus">
-            <span>State focus</span>
-            <select
-              id="mobility-state-focus"
-              value={focusState}
-              onChange={(event) => setFocusState(event.target.value)}
-            >
-              <option>{ALL_STATES}</option>
-              {stateNames.map((state) => <option key={state}>{state}</option>)}
-            </select>
-          </label>
-          <p>Click a state in the wheel to coordinate both views.</p>
-          {focusState !== ALL_STATES && (
-            <button type="button" onClick={() => setFocusState(ALL_STATES)}>Reset focus</button>
-          )}
-        </div>
+      <div className="mobility-control-desk">
         <div className="mobility-timeline-slot" ref={setTimelineHost} />
       </div>
 

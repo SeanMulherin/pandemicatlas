@@ -173,19 +173,40 @@ function countyAtPointer(
 ): number | null {
   const rectangle = event.currentTarget.getBoundingClientRect();
   if (rectangle.width <= 0 || rectangle.height <= 0) return null;
-  const x = Math.max(
+  const mapX = Math.max(
     0,
-    Math.min(metadata.geometry.width - 1, Math.floor(((event.clientX - rectangle.left) / rectangle.width) * metadata.geometry.width)),
+    Math.min(metadata.geometry.width - 1, ((event.clientX - rectangle.left) / rectangle.width) * metadata.geometry.width),
   );
-  const y = Math.max(
+  const mapY = Math.max(
     0,
-    Math.min(metadata.geometry.height - 1, Math.floor(((event.clientY - rectangle.top) / rectangle.height) * metadata.geometry.height)),
+    Math.min(metadata.geometry.height - 1, ((event.clientY - rectangle.top) / rectangle.height) * metadata.geometry.height),
   );
   const context = paths.picker.getContext("2d", { willReadFrequently: true });
   if (!context) return null;
-  const [red, green, blue] = context.getImageData(x, y, 1, 1).data;
-  const index = red + (green << 8) + (blue << 16) - 1;
-  return index >= 0 && index < metadata.countyCount ? index : null;
+  const pixelX = Math.floor(mapX);
+  const pixelY = Math.floor(mapY);
+  const offsets = [
+    [0, 0], [-1, 0], [1, 0], [0, -1], [0, 1],
+    [-1, -1], [1, -1], [-1, 1], [1, 1],
+  ] as const;
+  const checked = new Set<number>();
+
+  for (const [offsetX, offsetY] of offsets) {
+    const x = Math.max(0, Math.min(metadata.geometry.width - 1, pixelX + offsetX));
+    const y = Math.max(0, Math.min(metadata.geometry.height - 1, pixelY + offsetY));
+    const [red, green, blue] = context.getImageData(x, y, 1, 1).data;
+    const candidateIndex = red + (green << 8) + (blue << 16) - 1;
+    if (
+      candidateIndex < 0
+      || candidateIndex >= metadata.countyCount
+      || checked.has(candidateIndex)
+    ) continue;
+    checked.add(candidateIndex);
+    if (context.isPointInPath(paths.counties[candidateIndex], mapX, mapY)) {
+      return candidateIndex;
+    }
+  }
+  return null;
 }
 
 function countyRegion(state: string): CountyCenter["region"] {
@@ -303,6 +324,7 @@ export default function CountyIncidenceMap({
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [hoveredCounty, setHoveredCounty] = useState<number | null>(null);
   const [selectedCounty, setSelectedCounty] = useState<number | null>(null);
+  const [pointerInsideMap, setPointerInsideMap] = useState(false);
   const [resizeVersion, setResizeVersion] = useState(0);
 
   useEffect(() => {
@@ -398,7 +420,9 @@ export default function CountyIncidenceMap({
     return highestValue > 0 ? highestIndex : null;
   }, [assets, valueOffset]);
 
-  const detailCountyIndex = hoveredCounty ?? selectedCounty ?? dailyHighCounty;
+  const detailCountyIndex = pointerInsideMap
+    ? hoveredCounty
+    : selectedCounty ?? dailyHighCounty;
   const detailCounty = assets && detailCountyIndex !== null
     ? assets.metadata.geometry.counties[detailCountyIndex]
     : null;
@@ -480,13 +504,14 @@ export default function CountyIncidenceMap({
   function onPointerMove(event: ReactPointerEvent<HTMLCanvasElement>) {
     if (!assets || !paths) return;
     const county = countyAtPointer(event, assets.metadata, paths);
+    setPointerInsideMap(true);
     setHoveredCounty((current) => current === county ? current : county);
   }
 
   function onPointerDown(event: ReactPointerEvent<HTMLCanvasElement>) {
     if (!assets || !paths) return;
     const county = countyAtPointer(event, assets.metadata, paths);
-    if (county !== null) setSelectedCounty(county);
+    if (event.pointerType !== "mouse" && county !== null) setSelectedCounty(county);
   }
 
   function onKeyDown(event: ReactKeyboardEvent<HTMLCanvasElement>) {
@@ -498,11 +523,13 @@ export default function CountyIncidenceMap({
     else if (event.key === "End") next = assets.metadata.countyCount - 1;
     else if (event.key === "Escape") {
       event.preventDefault();
+      setPointerInsideMap(false);
       setHoveredCounty(null);
       setSelectedCounty(null);
       return;
     } else return;
     event.preventDefault();
+    setPointerInsideMap(false);
     setHoveredCounty(null);
     setSelectedCounty(next);
   }
@@ -511,8 +538,8 @@ export default function CountyIncidenceMap({
   const unit = scale === "perCapita"
     ? `reported ${noun} per 100,000 residents per day, seven-day average`
     : `reported ${noun} per day, seven-day average`;
-  const detailStatus = hoveredCounty !== null
-    ? "County under pointer"
+  const detailStatus = pointerInsideMap
+    ? hoveredCounty !== null ? "County under pointer" : "No county under pointer"
     : selectedCounty !== null
       ? "Selected county"
       : dailyHighCounty !== null
@@ -564,7 +591,10 @@ export default function CountyIncidenceMap({
               tabIndex={0}
               aria-label={`U.S. county map of ${unit} on ${formatDate(selectedDate)}. Darker blue means higher incidence. Move the pointer or use the arrow keys to navigate spatially between counties.`}
               onPointerMove={onPointerMove}
-              onPointerLeave={() => setHoveredCounty(null)}
+              onPointerLeave={() => {
+                setPointerInsideMap(false);
+                setHoveredCounty(null);
+              }}
               onPointerDown={onPointerDown}
               onKeyDown={onKeyDown}
             />
@@ -602,7 +632,7 @@ export default function CountyIncidenceMap({
               </p>
             ) : null}
             <p className="county-keyboard-note">
-              Hover or click to inspect. With the map focused, use the arrow keys to move to the
+              Hover or tap to inspect. With the map focused, use the arrow keys to move to the
               nearest county in that direction; press Escape to return to the daily high.
             </p>
           </aside>
