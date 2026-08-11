@@ -37,7 +37,7 @@ test("server-renders the finished Pandemic Atlas shell", async () => {
   assert.match(html, /1,158 days/);
   assert.match(html, /103\.9M/);
   assert.match(html, /1\.1M/);
-  assert.match(html, /I developed this historical atlas, enhanced with ChatGPT/);
+  assert.match(html, /I developed this historical atlas, recently enhanced with ChatGPT/);
   assert.doesNotMatch(html, /Preparing 63,000\+ daily records|Rebuilding the pandemic, day by day/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|Starter Project/i);
 });
@@ -139,10 +139,15 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(layout, /generateMetadata/);
   assert.match(atlas, /Exploring the US COVID-19 Pandemic/);
   assert.match(atlas, /className="hero-intro"/);
-  assert.match(atlas, /I developed this historical atlas, enhanced with ChatGPT/);
-  assert.match(atlas, /The New York Times national, state, and county/);
-  assert.match(atlas, /Kang&apos;s anonymized cellphone-derived mobility data/);
-  assert.match(atlas, /nationwide incidence through statewide dynamics and rankings to countywide patterns/);
+  assert.match(atlas, /I developed this historical atlas, recently enhanced with ChatGPT/);
+  assert.match(atlas, /The New York Times national, state,\s*and county/);
+  assert.match(atlas, /mobility data described by\s*Kang et al\. \(2020\)/);
+  assert.doesNotMatch(atlas, /coordinated interactives|easier to investigate/);
+  assert.match(atlas, /comparisons easier to explore/);
+  assert.match(
+    atlas,
+    /nationwide incidence through statewide dynamics\s*and rankings to countywide patterns/,
+  );
   assert.match(heroLedgerRule, /grid-template-columns:\s*minmax\(16rem,\s*1\.2fr\)/);
   assert.match(heroArchiveSpanRule, /white-space:\s*nowrap/);
   assert.match(heroIntroRule, /border-left:\s*3px solid var\(--cases\)/);
