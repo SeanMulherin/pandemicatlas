@@ -10,6 +10,11 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import {
+  countyCenter,
+  isCountyArrowKey,
+  spatialCountyIndex,
+} from "./countySpatialNavigation";
 
 export interface MobilityStoryCounty {
   fips: string;
@@ -123,6 +128,7 @@ const RED = "#a9363e";
 const GOLD = "#8a5a00";
 const RULE = "rgba(21, 25, 30, 0.18)";
 const FLOW_FIELDS = 2;
+const MOBILITY_PLAYBACK_INTERVAL_MS = 350;
 
 /*
   Mobility chart map:
@@ -219,19 +225,40 @@ function countyAtPointer(
 ): number | null {
   const rectangle = event.currentTarget.getBoundingClientRect();
   if (rectangle.width <= 0 || rectangle.height <= 0) return null;
-  const x = Math.max(0, Math.min(
+  const mapX = Math.max(0, Math.min(
     metadata.geometry.width - 1,
-    Math.floor(((event.clientX - rectangle.left) / rectangle.width) * metadata.geometry.width),
+    ((event.clientX - rectangle.left) / rectangle.width) * metadata.geometry.width,
   ));
-  const y = Math.max(0, Math.min(
+  const mapY = Math.max(0, Math.min(
     metadata.geometry.height - 1,
-    Math.floor(((event.clientY - rectangle.top) / rectangle.height) * metadata.geometry.height),
+    ((event.clientY - rectangle.top) / rectangle.height) * metadata.geometry.height,
   ));
   const context = paths.picker.getContext("2d", { willReadFrequently: true });
   if (!context) return null;
-  const [red, green, blue] = context.getImageData(x, y, 1, 1).data;
-  const index = red + (green << 8) + (blue << 16) - 1;
-  return index >= 0 && index < metadata.countyCount ? index : null;
+  const pixelX = Math.floor(mapX);
+  const pixelY = Math.floor(mapY);
+  const offsets = [
+    [0, 0], [-1, 0], [1, 0], [0, -1], [0, 1],
+    [-1, -1], [1, -1], [-1, 1], [1, 1],
+  ] as const;
+  const checked = new Set<number>();
+
+  for (const [offsetX, offsetY] of offsets) {
+    const x = Math.max(0, Math.min(metadata.geometry.width - 1, pixelX + offsetX));
+    const y = Math.max(0, Math.min(metadata.geometry.height - 1, pixelY + offsetY));
+    const [red, green, blue] = context.getImageData(x, y, 1, 1).data;
+    const candidateIndex = red + (green << 8) + (blue << 16) - 1;
+    if (
+      candidateIndex < 0
+      || candidateIndex >= metadata.countyCount
+      || checked.has(candidateIndex)
+    ) continue;
+    checked.add(candidateIndex);
+    if (context.isPointInPath(paths.counties[candidateIndex], mapX, mapY)) {
+      return candidateIndex;
+    }
+  }
+  return null;
 }
 
 function flowOffset(weekIndex: number, countyIndex: number, countyCount: number): number {
@@ -328,6 +355,10 @@ function AnimatedCountyFlowMap({
     () => Math.max(0, assets.map.geometry.counties.findIndex((county) => county.fips === selectedFips)),
     [assets.map.geometry.counties, selectedFips],
   );
+  const countyCenters = useMemo(
+    () => assets.map.geometry.counties.map((county) => countyCenter(county.path, county.state)),
+    [assets.map.geometry.counties],
+  );
   const detailIndex = hoveredIndex ?? selectedIndex;
   const detailGeometry = assets.map.geometry.counties[detailIndex];
   const detailOffset = flowOffset(weekIndex, detailIndex, assets.metadata.countyCount);
@@ -394,17 +425,13 @@ function AnimatedCountyFlowMap({
   };
 
   const handleKeyDown = (event: ReactKeyboardEvent<HTMLCanvasElement>) => {
-    if (!["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp", "Home", "End"].includes(event.key)) {
-      return;
-    }
-    event.preventDefault();
     let next = selectedIndex;
-    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
-      next = (selectedIndex + 1) % assets.metadata.countyCount;
-    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-      next = (selectedIndex - 1 + assets.metadata.countyCount) % assets.metadata.countyCount;
+    if (isCountyArrowKey(event.key)) {
+      next = spatialCountyIndex(countyCenters, selectedIndex, event.key);
     } else if (event.key === "Home") next = 0;
-    else next = assets.metadata.countyCount - 1;
+    else if (event.key === "End") next = assets.metadata.countyCount - 1;
+    else return;
+    event.preventDefault();
     onSelectedFips(assets.map.geometry.counties[next].fips);
     setHoveredIndex(null);
   };
@@ -419,7 +446,7 @@ function AnimatedCountyFlowMap({
           className="mobility-county-map-canvas"
           role="img"
           tabIndex={0}
-          aria-label={`Animated U.S. county map of net cross-county mobility for ${activeWeek ? formatWeek(activeWeek) : "the selected week"}. Blue means net inbound and red means net outbound. Hover, click, or use arrow keys to inspect counties.`}
+          aria-label={`Animated U.S. county map of net cross-county mobility for ${activeWeek ? formatWeek(activeWeek) : "the selected week"}. Blue means net inbound and red means net outbound. Move the pointer or use the arrow keys to navigate spatially between counties.`}
           onPointerMove={handlePointer}
           onPointerLeave={() => setHoveredIndex(null)}
           onPointerDown={(event) => {
@@ -456,7 +483,8 @@ function AnimatedCountyFlowMap({
         </dl>
         <small className="mobility-detail-note">
           Color uses a fixed signed-log scale across all 156 weeks. Gold outlines the county
-          carried into the spotlight below.
+          carried into the spotlight below. With the map focused, use the arrow keys to move to
+          the nearest county in that direction.
         </small>
       </aside>
     </div>
@@ -1008,7 +1036,7 @@ export default function MobilityStory({
     if (!isPlaying || !assets) return;
     const interval = window.setInterval(() => {
       setWeekIndex((current) => (current + 1) % assets.metadata.weekCount);
-    }, 650);
+    }, MOBILITY_PLAYBACK_INTERVAL_MS);
     return () => window.clearInterval(interval);
   }, [assets, isPlaying]);
 

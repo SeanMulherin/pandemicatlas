@@ -133,6 +133,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     stateMap,
     styles,
     countyMap,
+    countyNavigation,
     mobilityAtlas,
     mobilityStory,
     mobilityBuild,
@@ -153,6 +154,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     readFile(new URL("../app/StateIncidenceMap.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/CountyIncidenceMap.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/countySpatialNavigation.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/MobilityAtlas.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/MobilityStory.tsx", import.meta.url), "utf8"),
     readFile(new URL("../analysis/prepare_kang_mobility_all.R", import.meta.url), "utf8"),
@@ -344,12 +346,9 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(countyMap, /No report/);
   assert.match(countyMap, /highestValue > 0 \? highestIndex : null/);
   assert.match(countyMap, /!isPlaying && selectedCounty !== null/);
-  assert.match(countyMap, /function countyCenter/);
-  assert.match(countyMap, /function spatialCountyIndex/);
+  assert.match(countyMap, /from "\.\/countySpatialNavigation"/);
   assert.match(countyMap, /const countyCenters = useMemo/);
   assert.match(countyMap, /isCountyArrowKey\(event\.key\)/);
-  assert.match(countyMap, /candidate\.region !== origin\.region/);
-  assert.match(countyMap, /perpendicular > forward/);
   assert.match(countyMap, /context\.isPointInPath\(paths\.counties\[candidateIndex\], mapX, mapY\)/);
   assert.match(countyMap, /event\.pointerType !== "mouse" && county !== null/);
   assert.match(countyMap, /pointerInsideMap\s*\? hoveredCounty/);
@@ -360,6 +359,10 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     /next = \(current \+ 1\) % assets\.metadata\.countyCount|next = \(current - 1 \+ assets\.metadata\.countyCount\)/,
   );
   assert.match(countyMap, /nearest county in that direction/);
+  assert.match(countyNavigation, /export function countyCenter/);
+  assert.match(countyNavigation, /export function spatialCountyIndex/);
+  assert.match(countyNavigation, /candidate\.region !== origin\.region/);
+  assert.match(countyNavigation, /perpendicular > forward/);
   assert.match(countyBuild, /CAP_QUANTILE = 0\.995/);
   assert.match(countyBuild, /SPECIAL_REPORTING_AREAS/);
   assert.match(countyBuild, /Internal reporting gap/);
@@ -499,6 +502,10 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityStory, /const endDate = pulse\.at\(-1\)\?\.weekEnd/);
   assert.match(mobilityStory, /className="mobility-timeline-range"/);
   assert.match(mobilityStory, /aria-label="Mobility week"/);
+  assert.match(mobilityStory, /const MOBILITY_PLAYBACK_INTERVAL_MS = 350/);
+  assert.match(mobilityStory, /\}, MOBILITY_PLAYBACK_INTERVAL_MS\);/);
+  assert.doesNotMatch(mobilityStory, /\}, 650\);/);
+  assert.equal(mobilityDynamics.weekCount * 350, 54_600);
   assert.match(
     mobilityStory,
     /startDate \? weekFormatter\.format\(new Date\(`\$\{startDate\}T00:00:00Z`\)\) : ""/,
@@ -512,6 +519,23 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityStory, /rootMargin: "1200px 0px"/);
   assert.match(mobilityStory, /Mobility at week t is compared with incidence at week t \+ lag/);
   assert.match(mobilityStory, /does not estimate a causal effect/);
+  assert.match(mobilityStory, /from "\.\/countySpatialNavigation"/);
+  assert.match(mobilityStory, /const countyCenters = useMemo/);
+  assert.match(mobilityStory, /isCountyArrowKey\(event\.key\)/);
+  assert.match(
+    mobilityStory,
+    /spatialCountyIndex\(countyCenters, selectedIndex, event\.key\)/,
+  );
+  assert.match(mobilityStory, /navigate spatially between counties/);
+  assert.match(mobilityStory, /nearest county in that direction/);
+  assert.doesNotMatch(
+    mobilityStory,
+    /selectedIndex \+ 1|selectedIndex - 1 \+ assets\.metadata\.countyCount/,
+  );
+  assert.match(
+    mobilityStory,
+    /context\.isPointInPath\(paths\.counties\[candidateIndex\], mapX, mapY\)/,
+  );
   assert.match(styles, /\.mobility-timeline \{/);
   assert.match(baseMobilitySectionTitleRule, /max-width: 18ch/);
   assert.match(baseMobilityFigureTitleRule, /max-width: 18ch/);
