@@ -597,14 +597,51 @@ function CountyBalance({
 export default function MobilityAtlas({
   covidSeries,
   covidMetric,
+  onControlPositionChange,
 }: {
   covidSeries: MobilityCovidDatum[];
   covidMetric: "cases" | "deaths";
+  onControlPositionChange: (mobilityTop: number | null) => void;
 }) {
+  const mobilityControlDeskRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<MobilityData | null>(null);
   const [error, setError] = useState("");
   const [focusState, setFocusState] = useState(ALL_STATES);
   const [timelineHost, setTimelineHost] = useState<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    let animationFrame = 0;
+
+    const updatePosition = () => {
+      animationFrame = 0;
+      const desk = mobilityControlDeskRef.current;
+      if (!desk || window.getComputedStyle(desk).position !== "sticky") {
+        onControlPositionChange(null);
+        return;
+      }
+      onControlPositionChange(Math.max(0, desk.getBoundingClientRect().top));
+    };
+
+    const scheduleUpdate = () => {
+      if (animationFrame) return;
+      animationFrame = window.requestAnimationFrame(updatePosition);
+    };
+
+    scheduleUpdate();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    const deskObserver = typeof ResizeObserver === "undefined"
+      ? null
+      : new ResizeObserver(scheduleUpdate);
+    if (mobilityControlDeskRef.current) deskObserver?.observe(mobilityControlDeskRef.current);
+    return () => {
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      deskObserver?.disconnect();
+      onControlPositionChange(null);
+    };
+  }, [data, onControlPositionChange]);
 
   useEffect(() => {
     let cancelled = false;
@@ -717,7 +754,7 @@ export default function MobilityAtlas({
         <CountyBalance counties={data.counties} focusState={focusState} />
       </article>
 
-      <div className="mobility-control-desk">
+      <div className="mobility-control-desk" ref={mobilityControlDeskRef}>
         <div className="mobility-timeline-slot" ref={setTimelineHost} />
       </div>
 

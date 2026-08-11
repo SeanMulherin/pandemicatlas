@@ -711,6 +711,7 @@ function ErrorView({ message, onRetry }: { message: string; onRetry: () => void 
 }
 
 export function CovidAtlas() {
+  const explorerControlsRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<CovidData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -726,6 +727,24 @@ export function CovidAtlas() {
     "Texas",
   ]);
   const [selectionMessage, setSelectionMessage] = useState("");
+
+  const updateExplorerControlHandoff = useCallback((mobilityTop: number | null) => {
+    const controls = explorerControlsRef.current;
+    if (!controls) return;
+    if (mobilityTop === null) {
+      controls.style.removeProperty("--explorer-handoff-offset");
+      controls.classList.remove("is-displaced");
+      return;
+    }
+
+    const controlsHeight = controls.getBoundingClientRect().height;
+    const displacement = Math.min(
+      controlsHeight,
+      Math.max(0, controlsHeight - mobilityTop),
+    );
+    controls.style.setProperty("--explorer-handoff-offset", `${-displacement}px`);
+    controls.classList.toggle("is-displaced", displacement >= controlsHeight - 0.5);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -896,7 +915,7 @@ export function CovidAtlas() {
         deaths={compactFormatter.format(archiveTotals.deaths)}
       />
 
-      <div className="explorer-controls" aria-label="Explorer controls">
+      <div ref={explorerControlsRef} className="explorer-controls" aria-label="Explorer controls">
         <SegmentedControl<Metric>
           label="Metric"
           value={metric}
@@ -1127,7 +1146,11 @@ export function CovidAtlas() {
         />
       </section>
 
-      <MobilityAtlas covidSeries={data.national} covidMetric={metric} />
+      <MobilityAtlas
+        covidSeries={data.national}
+        covidMetric={metric}
+        onControlPositionChange={updateExplorerControlHandoff}
+      />
 
       <section className="methodology-section" id="methodology">
         <div className="methodology-grid">

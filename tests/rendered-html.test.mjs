@@ -206,8 +206,18 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.doesNotMatch(headerRule, /position:\s*sticky|top:\s*0/);
   assert.match(explorerControlsRule, /position:\s*sticky/);
   assert.match(explorerControlsRule, /top:\s*0/);
+  assert.match(
+    explorerControlsRule,
+    /transform:\s*translateY\(var\(--explorer-handoff-offset\)\)/,
+  );
+  assert.match(explorerControlsRule, /will-change:\s*transform/);
+  assert.match(
+    styles,
+    /\.explorer-controls\.is-displaced\s*\{[^}]*visibility:\s*hidden;[^}]*pointer-events:\s*none;/,
+  );
   assert.match(mobilityControlsRule, /position:\s*sticky/);
   assert.match(mobilityControlsRule, /top:\s*0/);
+  assert.match(mobilityControlsRule, /margin-top:\s*clamp\(5rem,\s*10vw,\s*9rem\)/);
   assert.match(htmlRule, /scroll-padding-top:\s*10rem/);
   assert.match(page, /<CovidAtlas \/>/);
   assert.match(layout, /generateMetadata/);
@@ -269,7 +279,13 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.doesNotMatch(styles, /\.tile-map\s*\{|\.state-tile(?:\s|:|\.)/);
   assert.match(atlas, /Statewide Rankings/);
   assert.match(atlas, /<CountyIncidenceMap/);
-  assert.match(atlas, /<MobilityAtlas covidSeries=\{data\.national\} covidMetric=\{metric\} \/>/);
+  assert.match(atlas, /const explorerControlsRef = useRef<HTMLDivElement>\(null\)/);
+  assert.match(atlas, /const updateExplorerControlHandoff = useCallback/);
+  assert.match(atlas, /Math\.max\(0, controlsHeight - mobilityTop\)/);
+  assert.match(atlas, /style\.setProperty\("--explorer-handoff-offset"/);
+  assert.match(atlas, /classList\.toggle\("is-displaced"/);
+  assert.match(atlas, /ref=\{explorerControlsRef\} className="explorer-controls"/);
+  assert.match(atlas, /onControlPositionChange=\{updateExplorerControlHandoff\}/);
   assert.doesNotMatch(atlas, /Burden ranks states by the active metric and view/);
   assert.doesNotMatch(atlas, /floating-playback|is-handoff-hidden|pendingHandoffFocusRef|showFloatingPlayback|timeConsoleRef/);
   assert.ok(atlas.indexOf('className="explorer-controls"') < atlas.indexOf('className="time-console"'));
@@ -318,7 +334,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   );
   assert.doesNotMatch(atlas, /id="fingerprints"|MiniWaveCanvas|fingerprintSeries/);
   assert.ok(atlas.indexOf("Statewide Rankings") < atlas.indexOf("<CountyIncidenceMap"));
-  assert.ok(atlas.indexOf("<CountyIncidenceMap") < atlas.indexOf("<MobilityAtlas covidSeries"));
+  assert.ok(atlas.indexOf("<CountyIncidenceMap") < atlas.indexOf("<MobilityAtlas"));
   assert.match(countyMap, /Countywide Incidence/);
   assert.match(countyMap, /Darker blue indicates higher incidence/);
   assert.match(countyMap, /county-incidence-map\.json/);
@@ -425,6 +441,26 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityAtlas, /Where state borders were most porous/);
   assert.match(mobilityAtlas, /Which counties pulled travel in—or pushed it out/);
   assert.match(mobilityAtlas, /<MobilityStory/);
+  assert.match(
+    mobilityAtlas,
+    /const mobilityControlDeskRef = useRef<HTMLDivElement>\(null\)/,
+  );
+  assert.match(
+    mobilityAtlas,
+    /window\.getComputedStyle\(desk\)\.position !== "sticky"/,
+  );
+  assert.match(mobilityAtlas, /desk\.getBoundingClientRect\(\)\.top/);
+  assert.match(mobilityAtlas, /window\.requestAnimationFrame\(updatePosition\)/);
+  assert.match(
+    mobilityAtlas,
+    /window\.addEventListener\("scroll", scheduleUpdate, \{ passive: true \}\)/,
+  );
+  assert.match(mobilityAtlas, /new ResizeObserver\(scheduleUpdate\)/);
+  assert.match(
+    mobilityAtlas,
+    /className="mobility-control-desk" ref=\{mobilityControlDeskRef\}/,
+  );
+  assert.doesNotMatch(mobilityAtlas, /mobility-sticky-sentinel/);
   assert.ok(
     mobilityAtlas.indexOf("Which counties pulled travel in—or pushed it out")
       < mobilityAtlas.indexOf('className="mobility-control-desk"'),
@@ -506,6 +542,15 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     /\.mobility-ledger\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/,
   );
   assert.match(styles, /\.mobility-control-desk \{[\s\S]*?position: sticky;/);
+  assert.doesNotMatch(styles, /\.mobility-sticky-sentinel/);
+  assert.match(
+    narrowMobilityCss,
+    /\.explorer-controls\s*\{[^}]*position:\s*relative;[^}]*top:\s*auto;/,
+  );
+  assert.match(
+    narrowMobilityCss,
+    /\.mobility-control-desk\s*\{[^}]*position:\s*relative;[^}]*top:\s*auto;/,
+  );
   assert.match(styles, /\.mobility-timeline-slot \{/);
   assert.match(
     styles,
