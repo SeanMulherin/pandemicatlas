@@ -128,7 +128,6 @@ export default function StateIncidenceMap({
     [states],
   );
   const detailState = stateByName.get(hoveredState || focusedState) ?? dailyHighState;
-  const detailSelected = detailState ? selectedStates.includes(detailState.name) : false;
 
   function onStateKeyDown(event: ReactKeyboardEvent<SVGPathElement>, state: string) {
     if (event.key !== "Enter" && event.key !== " ") return;
@@ -245,11 +244,6 @@ export default function StateIncidenceMap({
             <p>{detailState?.abbr}</p>
             <strong>{detailState?.displayValue ?? "—"}</strong>
             <small>{unitLabel}</small>
-            {detailState ? (
-              <button type="button" onClick={() => onToggleState(detailState.name)}>
-                {detailSelected ? "Remove from comparison" : "Add to comparison"}
-              </button>
-            ) : null}
             <time>{selectedDateLabel}</time>
           </aside>
         </div>

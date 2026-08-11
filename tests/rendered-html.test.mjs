@@ -23,6 +23,80 @@ async function render() {
   );
 }
 
+function countyCenterFromPath(path, state) {
+  const rings = path.match(/M[^M]+/g) ?? [];
+  let totalArea = 0;
+  let weightedX = 0;
+  let weightedY = 0;
+  let minimumX = Number.POSITIVE_INFINITY;
+  let minimumY = Number.POSITIVE_INFINITY;
+  let maximumX = Number.NEGATIVE_INFINITY;
+  let maximumY = Number.NEGATIVE_INFINITY;
+
+  rings.forEach((ring) => {
+    const coordinates = (ring.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+    const points = [];
+    for (let index = 0; index + 1 < coordinates.length; index += 2) {
+      const x = coordinates[index];
+      const y = coordinates[index + 1];
+      points.push({ x, y });
+      minimumX = Math.min(minimumX, x);
+      minimumY = Math.min(minimumY, y);
+      maximumX = Math.max(maximumX, x);
+      maximumY = Math.max(maximumY, y);
+    }
+    if (points.length < 3) return;
+    let twiceArea = 0;
+    let centroidXNumerator = 0;
+    let centroidYNumerator = 0;
+    for (let index = 0, previous = points.length - 1; index < points.length; previous = index, index += 1) {
+      const from = points[previous];
+      const to = points[index];
+      const cross = (from.x * to.y) - (to.x * from.y);
+      twiceArea += cross;
+      centroidXNumerator += (from.x + to.x) * cross;
+      centroidYNumerator += (from.y + to.y) * cross;
+    }
+    if (Math.abs(twiceArea) <= Number.EPSILON) return;
+    totalArea += twiceArea / 2;
+    weightedX += centroidXNumerator / 6;
+    weightedY += centroidYNumerator / 6;
+  });
+
+  const region = state === "Alaska" ? "alaska" : state === "Hawaii" ? "hawaii" : "contiguous";
+  if (Math.abs(totalArea) > Number.EPSILON) {
+    return { x: weightedX / totalArea, y: weightedY / totalArea, region };
+  }
+  return { x: (minimumX + maximumX) / 2, y: (minimumY + maximumY) / 2, region };
+}
+
+function directionalCountyIndex(centers, currentIndex, key) {
+  const origin = centers[currentIndex];
+  const horizontal = key === "ArrowLeft" || key === "ArrowRight";
+  let bestIndex = currentIndex;
+  let bestScore = Number.POSITIVE_INFINITY;
+  centers.forEach((candidate, index) => {
+    if (index === currentIndex || candidate.region !== origin.region) return;
+    const deltaX = candidate.x - origin.x;
+    const deltaY = candidate.y - origin.y;
+    const forward = key === "ArrowRight"
+      ? deltaX
+      : key === "ArrowLeft"
+        ? -deltaX
+        : key === "ArrowDown"
+          ? deltaY
+          : -deltaY;
+    if (forward <= 0.25) return;
+    const perpendicular = horizontal ? Math.abs(deltaY) : Math.abs(deltaX);
+    if (perpendicular > forward) return;
+    const score = Math.hypot(deltaX, deltaY) + 2 * perpendicular;
+    if (score >= bestScore) return;
+    bestScore = score;
+    bestIndex = index;
+  });
+  return bestIndex;
+}
+
 test("server-renders the finished Pandemic Atlas shell", async () => {
   const response = await render();
   assert.equal(response.status, 200);
@@ -165,7 +239,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /Statewide Incidence/);
   assert.match(atlas, /<h2 className="states-title">Statewide Incidence<\/h2>/);
   assert.match(atlas, /<h2 className="analysis-title">Statewide Waves<\/h2>/);
-  assert.match(atlas, /Select the states you wish to highlight for evaluation/);
+  assert.match(atlas, /\(Un\)select the states you wish to highlight for evaluation/);
   assert.match(atlas, /Choose up to ten states on the map/);
   assert.match(atlas, /MAX_SELECTED_STATES = 10/);
   assert.match(atlas, /<StateIncidenceMap/);
@@ -178,6 +252,9 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(stateMap, /tabIndex=\{0\}/);
   assert.match(stateMap, /aria-pressed=\{isSelected\}/);
   assert.match(stateMap, /event\.key !== "Enter" && event\.key !== " "/);
+  assert.match(stateMap, /onClick=\{\(\) => onToggleState\(state\.name\)\}/);
+  assert.doesNotMatch(stateMap, /detailSelected|Remove from comparison|Add to comparison/);
+  assert.doesNotMatch(styles, /\.state-map-detail\s*>\s*button\s*\{/);
   assert.match(stateMapSvgRule, /width:\s*100%/);
   assert.doesNotMatch(styles, /\.tile-map\s*\{|\.state-tile(?:\s|:|\.)/);
   assert.match(atlas, /Statewide Rankings/);
@@ -241,6 +318,17 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(countyMap, /No report/);
   assert.match(countyMap, /highestValue > 0 \? highestIndex : null/);
   assert.match(countyMap, /!isPlaying && selectedCounty !== null/);
+  assert.match(countyMap, /function countyCenter/);
+  assert.match(countyMap, /function spatialCountyIndex/);
+  assert.match(countyMap, /const countyCenters = useMemo/);
+  assert.match(countyMap, /isCountyArrowKey\(event\.key\)/);
+  assert.match(countyMap, /candidate\.region !== origin\.region/);
+  assert.match(countyMap, /perpendicular > forward/);
+  assert.doesNotMatch(
+    countyMap,
+    /next = \(current \+ 1\) % assets\.metadata\.countyCount|next = \(current - 1 \+ assets\.metadata\.countyCount\)/,
+  );
+  assert.match(countyMap, /nearest county in that direction/);
   assert.match(countyBuild, /CAP_QUANTILE = 0\.995/);
   assert.match(countyBuild, /SPECIAL_REPORTING_AREAS/);
   assert.match(countyBuild, /Internal reporting gap/);
@@ -295,6 +383,23 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     countyPayload[encodedIndex(1_157, losAngelesIndex, 0)],
     countyMetadata.missingValue,
   );
+  const countyCenters = countyMetadata.geometry.counties.map((county) => (
+    countyCenterFromPath(county.path, county.state)
+  ));
+  const expectedLosAngelesMoves = {
+    ArrowRight: "06071",
+    ArrowLeft: "06111",
+    ArrowUp: "06029",
+    ArrowDown: "06059",
+  };
+  Object.entries(expectedLosAngelesMoves).forEach(([key, fips]) => {
+    const destination = directionalCountyIndex(countyCenters, losAngelesIndex, key);
+    assert.equal(countyMetadata.geometry.counties[destination].fips, fips);
+  });
+  ["51610", "51678", "51685"].forEach((fips) => {
+    const index = countyMetadata.geometry.counties.findIndex((county) => county.fips === fips);
+    assert.ok(Number.isFinite(countyCenters[index].x) && Number.isFinite(countyCenters[index].y));
+  });
   assert.match(mobilityAtlas, /Human Mobility Patterns/);
   assert.match(mobilityAtlas, /Human mobility is defined here as the origin-to-destination/);
   assert.doesNotMatch(mobilityAtlas, /We define human mobility/);

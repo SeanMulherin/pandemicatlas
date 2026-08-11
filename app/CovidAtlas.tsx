@@ -999,7 +999,7 @@ export function CovidAtlas() {
       <section className="atlas-section states-section" id="states">
         <h2 className="states-title">Statewide Incidence</h2>
         <p className="states-instructions">
-          Select the states you wish to highlight for evaluation. Choose up to ten states on the map;
+          (Un)select the states you wish to highlight for evaluation. Choose up to ten states on the map;
           your selection carries into the incidence comparison and statewide rankings below.
         </p>
         <div className="map-layout">

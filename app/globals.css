@@ -939,22 +939,6 @@ button {
   line-height: 1.45;
 }
 
-.state-map-detail > button {
-  width: 100%;
-  margin-top: 1.4rem;
-  padding: 0.7rem 0.8rem;
-  border: 1px solid var(--ink);
-  border-radius: 0;
-  background: var(--ink);
-  color: var(--paper-light);
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  text-align: left;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
 .state-map-detail > time {
   margin-top: auto;
   padding-top: 1.2rem;
