@@ -672,6 +672,15 @@ function AtlasHero({ cases, deaths }: { cases: string; deaths: string }) {
           </div>
           <p>*Net sum of daily reports, including later corrections.</p>
         </div>
+        <p className="hero-intro">
+          I developed this historical atlas, enhanced with ChatGPT, to support engaging exploration of
+          pertinent U.S. COVID-19 data. Drawing on The New York Times national, state, and county
+          COVID-19 archive and Kang&apos;s anonymized cellphone-derived mobility data, I organize the
+          page from nationwide incidence through statewide dynamics and rankings to countywide patterns
+          and human-mobility networks. The coordinated interactives are intended to make temporal and
+          geographic comparisons easier to investigate while preserving the source and methodological
+          context needed for careful interpretation.
+        </p>
       </div>
     </section>
   );

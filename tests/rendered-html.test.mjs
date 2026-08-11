@@ -37,6 +37,7 @@ test("server-renders the finished Pandemic Atlas shell", async () => {
   assert.match(html, /1,158 days/);
   assert.match(html, /103\.9M/);
   assert.match(html, /1\.1M/);
+  assert.match(html, /I developed this historical atlas, enhanced with ChatGPT/);
   assert.doesNotMatch(html, /Preparing 63,000\+ daily records|Rebuilding the pandemic, day by day/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|Starter Project/i);
 });
@@ -107,6 +108,9 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   const explorerControlsRule = firstCssRule(".explorer-controls");
   const mobilityControlsRule = firstCssRule(".mobility-control-desk");
   const mobilityLedgerRule = firstCssRule(".mobility-ledger");
+  const heroLedgerRule = firstCssRule(".hero-ledger");
+  const heroArchiveSpanRule = firstCssRule(".hero-ledger > div:first-child strong");
+  const heroIntroRule = firstCssRule(".hero-intro");
   const stateMapSvgRule = firstCssRule(".state-map-svg");
   const htmlRule = firstCssRule("html");
   const baseMobilitySectionTitleRule = firstCssRule(
@@ -115,6 +119,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   const baseMobilityFigureTitleRule = firstCssRule(".mobility-figure-heading h3");
   const wideMobilityCss = cssBlockAfter(styles, "@media (min-width: 50.01rem)");
   const narrowMobilityCss = cssBlockAfter(styles, "@media (max-width: 50rem)");
+  const phoneCss = cssBlockAfter(styles, "@media (max-width: 34rem)");
 
   assert.match(national, /^date,geoid,cases,cases_avg,cases_avg_per_100k/);
   assert.match(states, /^date,geoid,state,cases,cases_avg,cases_avg_per_100k/);
@@ -133,6 +138,23 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(page, /<CovidAtlas \/>/);
   assert.match(layout, /generateMetadata/);
   assert.match(atlas, /Exploring the US COVID-19 Pandemic/);
+  assert.match(atlas, /className="hero-intro"/);
+  assert.match(atlas, /I developed this historical atlas, enhanced with ChatGPT/);
+  assert.match(atlas, /The New York Times national, state, and county/);
+  assert.match(atlas, /Kang&apos;s anonymized cellphone-derived mobility data/);
+  assert.match(atlas, /nationwide incidence through statewide dynamics and rankings to countywide patterns/);
+  assert.match(heroLedgerRule, /grid-template-columns:\s*minmax\(16rem,\s*1\.2fr\)/);
+  assert.match(heroArchiveSpanRule, /white-space:\s*nowrap/);
+  assert.match(heroIntroRule, /border-left:\s*3px solid var\(--cases\)/);
+  assert.match(
+    firstCssRule(".hero-ledger", narrowMobilityCss),
+    /grid-template-columns:\s*minmax\(11\.5rem,\s*1\.25fr\)/,
+  );
+  assert.match(
+    firstCssRule(".hero-ledger > div:first-child strong", narrowMobilityCss),
+    /font-size:\s*clamp\(1\.25rem,\s*4vw,\s*1\.75rem\)/,
+  );
+  assert.match(firstCssRule(".hero-ledger", phoneCss), /grid-template-columns:\s*1fr/);
   assert.match(atlas, /href="https:\/\/seanmulherin\.github\.io\/">Home<\/a>/);
   assert.match(atlas, /Nationwide Incidence/);
   assert.match(atlas, /Statewide Incidence/);

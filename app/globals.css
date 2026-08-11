@@ -330,7 +330,7 @@ button {
 
 .hero-ledger {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(16rem, 1.2fr) repeat(2, minmax(0, 1fr));
   margin-top: clamp(1.75rem, 4vw, 3rem);
   border: 1px solid var(--rule-strong);
   background: var(--paper-deep);
@@ -375,6 +375,10 @@ button {
   line-height: 1;
 }
 
+.hero-ledger > div:first-child strong {
+  white-space: nowrap;
+}
+
 .hero-ledger > div:nth-child(2) strong {
   color: var(--cases-dark);
 }
@@ -393,6 +397,16 @@ button {
   font-size: 0.78rem;
   font-style: italic;
   line-height: 1.35;
+}
+
+.hero-intro {
+  max-width: 62rem;
+  margin: clamp(2rem, 4vw, 3.5rem) 0 0;
+  padding-left: clamp(1rem, 2vw, 1.5rem);
+  border-left: 3px solid var(--cases);
+  color: var(--ink-soft);
+  font-size: clamp(0.95rem, 1.3vw, 1.08rem);
+  line-height: 1.75;
 }
 
 /* The control desk */
@@ -2585,7 +2599,7 @@ button {
 
   .hero-ledger {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: minmax(11.5rem, 1.25fr) repeat(2, minmax(0, 1fr));
     border-top: 1px solid var(--ink);
     border-left: 0;
   }
@@ -2603,6 +2617,10 @@ button {
 
   .hero-ledger strong {
     font-size: clamp(1.25rem, 5vw, 2rem);
+  }
+
+  .hero-ledger > div:first-child strong {
+    font-size: clamp(1.25rem, 4vw, 1.75rem);
   }
 
   .hero-ledger p {
