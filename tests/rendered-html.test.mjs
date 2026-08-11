@@ -55,6 +55,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     page,
     layout,
     atlas,
+    stateMap,
     styles,
     countyMap,
     mobilityAtlas,
@@ -74,6 +75,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/CovidAtlas.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/StateIncidenceMap.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/CountyIncidenceMap.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/MobilityAtlas.tsx", import.meta.url), "utf8"),
@@ -104,12 +106,15 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   const headerRule = firstCssRule(".site-header");
   const explorerControlsRule = firstCssRule(".explorer-controls");
   const mobilityControlsRule = firstCssRule(".mobility-control-desk");
+  const mobilityLedgerRule = firstCssRule(".mobility-ledger");
+  const stateMapSvgRule = firstCssRule(".state-map-svg");
   const htmlRule = firstCssRule("html");
   const baseMobilitySectionTitleRule = firstCssRule(
     ".mobility-section-heading .section-heading-copy h2",
   );
   const baseMobilityFigureTitleRule = firstCssRule(".mobility-figure-heading h3");
   const wideMobilityCss = cssBlockAfter(styles, "@media (min-width: 50.01rem)");
+  const narrowMobilityCss = cssBlockAfter(styles, "@media (max-width: 50rem)");
 
   assert.match(national, /^date,geoid,cases,cases_avg,cases_avg_per_100k/);
   assert.match(states, /^date,geoid,state,cases,cases_avg,cases_avg_per_100k/);
@@ -134,8 +139,20 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /<h2 className="states-title">Statewide Incidence<\/h2>/);
   assert.match(atlas, /<h2 className="analysis-title">Statewide Waves<\/h2>/);
   assert.match(atlas, /Select the states you wish to highlight for evaluation/);
-  assert.match(atlas, /Choose up to ten state tiles/);
+  assert.match(atlas, /Choose up to ten states on the map/);
   assert.match(atlas, /MAX_SELECTED_STATES = 10/);
+  assert.match(atlas, /<StateIncidenceMap/);
+  assert.doesNotMatch(atlas, /State tile map|className="tile-map"|className=\{`state-tile/);
+  assert.match(stateMap, /fetch\("\/data\/county-incidence-map\.json"/);
+  assert.match(stateMap, /<svg/);
+  assert.match(stateMap, /stateBordersPath/);
+  assert.match(stateMap, /nationPath/);
+  assert.match(stateMap, /role="button"/);
+  assert.match(stateMap, /tabIndex=\{0\}/);
+  assert.match(stateMap, /aria-pressed=\{isSelected\}/);
+  assert.match(stateMap, /event\.key !== "Enter" && event\.key !== " "/);
+  assert.match(stateMapSvgRule, /width:\s*100%/);
+  assert.doesNotMatch(styles, /\.tile-map\s*\{|\.state-tile(?:\s|:|\.)/);
   assert.match(atlas, /Statewide Rankings/);
   assert.match(atlas, /<CountyIncidenceMap/);
   assert.match(atlas, /<MobilityAtlas covidSeries=\{data\.national\} covidMetric=\{metric\} \/>/);
@@ -205,6 +222,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.equal(countyMetadata.dayCount, 1_158);
   assert.equal(countyMetadata.countyCount, 3_142);
   assert.equal(countyMetadata.geometry.counties.length, 3_142);
+  assert.equal(new Set(countyMetadata.geometry.counties.map(({ state }) => state)).size, 51);
   assert.equal(countyMetadata.fields.length, 4);
   assert.equal(countyMetadata.quality.countiesWithoutData, 0);
   assert.equal(countyMetadata.quality.missingSourceValues, 0);
@@ -251,7 +269,8 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     countyMetadata.missingValue,
   );
   assert.match(mobilityAtlas, /Human Mobility Patterns/);
-  assert.match(mobilityAtlas, /We define human mobility/);
+  assert.match(mobilityAtlas, /Human mobility is defined here as the origin-to-destination/);
+  assert.doesNotMatch(mobilityAtlas, /We define human mobility/);
   assert.match(mobilityAtlas, /all modes of/);
   assert.match(mobilityAtlas, /Data represent ~10%/);
   assert.match(mobilityAtlas, /daily county release ends Apr\. 15, 2021/);
@@ -316,6 +335,18 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(
     wideMobilityCss,
     /\.mobility-figure-heading-plain h3 \{[^}]*font-size: clamp\(2\.2rem, 4\.4vw, 4\.1rem\);/,
+  );
+  assert.match(
+    mobilityLedgerRule,
+    /grid-template-columns:\s*minmax\(18rem, 1\.25fr\) repeat\(3, minmax\(0, 1fr\)\)/,
+  );
+  assert.match(
+    wideMobilityCss,
+    /\.mobility-ledger > div:first-child strong\s*\{[^}]*white-space:\s*nowrap;/,
+  );
+  assert.match(
+    narrowMobilityCss,
+    /\.mobility-ledger\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/,
   );
   assert.match(styles, /\.mobility-control-desk \{[\s\S]*?position: sticky;/);
   assert.match(styles, /\.mobility-timeline-slot \{/);

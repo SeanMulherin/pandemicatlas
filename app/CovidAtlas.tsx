@@ -12,6 +12,7 @@ import {
 } from "react";
 import MobilityAtlas from "./MobilityAtlas";
 import CountyIncidenceMap from "./CountyIncidenceMap";
+import StateIncidenceMap from "./StateIncidenceMap";
 
 type Metric = "cases" | "deaths";
 type Scale = "average" | "perCapita";
@@ -989,42 +990,27 @@ export function CovidAtlas() {
       <section className="atlas-section states-section" id="states">
         <h2 className="states-title">Statewide Incidence</h2>
         <p className="states-instructions">
-          Select the states you wish to highlight for evaluation. Choose up to ten state tiles;
-          your selection carries into the incidence comparison and burden ranking below.
+          Select the states you wish to highlight for evaluation. Choose up to ten states on the map;
+          your selection carries into the incidence comparison and statewide rankings below.
         </p>
         <div className="map-layout">
-          <div>
-            <div className="tile-map" aria-label={`State tile map for ${formatFullDate(selectedDate)}`}>
-              {STATE_TILES.map((tile) => {
-                const value = metricValue(currentStateRows?.get(tile.name), metric, scale);
-                const intensity = Math.sqrt(Math.max(0, value) / tileMaximum);
-                const isSelected = selectedStates.includes(tile.name);
-                return (
-                  <button
-                    key={tile.name}
-                    type="button"
-                    className={`state-tile${isSelected ? " is-selected" : ""}`}
-                    style={
-                      {
-                        gridColumn: tile.column,
-                        gridRow: tile.row,
-                        "--tile-intensity": intensity.toFixed(3),
-                      } as CSSProperties
-                    }
-                    aria-pressed={isSelected}
-                    aria-label={`${tile.name}: ${formatValue(value, scale)} ${metricLabel(metric, scale)}. ${isSelected ? "Remove from" : "Add to"} comparison.`}
-                    onClick={() => toggleState(tile.name)}
-                  >
-                    <strong>{tile.abbr}</strong>
-                    <span>{formatValue(value, scale, true)}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="map-legend" aria-label="Map intensity legend">
-              <span>Lower</span><i aria-hidden="true" /><span>Higher</span>
-            </div>
-          </div>
+          <StateIncidenceMap
+            states={STATE_TILES.map((state) => {
+              const value = metricValue(currentStateRows?.get(state.name), metric, scale);
+              return {
+                name: state.name,
+                abbr: state.abbr,
+                value,
+                displayValue: formatValue(value, scale, true),
+              };
+            })}
+            selectedStates={selectedStates}
+            selectedDateLabel={formatFullDate(selectedDate)}
+            unitLabel={metricLabel(metric, scale)}
+            maximum={tileMaximum}
+            isPlaying={isPlaying}
+            onToggleState={toggleState}
+          />
         </div>
       </section>
 

@@ -810,86 +810,182 @@ button {
   min-width: 0;
 }
 
-.tile-map {
+.state-map-frame {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  grid-template-rows: repeat(7, minmax(3rem, 1fr));
-  gap: clamp(0.22rem, 0.55vw, 0.55rem);
-  width: 100%;
-  aspect-ratio: 12 / 6.55;
-  padding: 1rem;
+  grid-template-columns: minmax(0, 3fr) minmax(12rem, 0.82fr);
   border: 1px solid var(--rule-strong);
   background: var(--paper-light);
 }
 
-.state-tile {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+.state-map-visual {
   min-width: 0;
-  min-height: 0;
-  padding: clamp(0.3rem, 0.55vw, 0.58rem);
-  overflow: hidden;
-  border: 1px solid rgb(0 77 85 / calc(0.2 + var(--tile-intensity)));
-  border-radius: 0;
-  background-color: rgb(0 109 119 / calc(0.06 + var(--tile-intensity)));
-  color: var(--ink);
-  text-align: left;
+  padding: clamp(0.75rem, 1.8vw, 1.4rem);
+  border-right: 1px solid var(--ink);
+}
+
+.state-map-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1023 / 602;
+  overflow: visible;
+  background: var(--paper-light);
+  touch-action: pan-y;
+}
+
+.state-map-shape {
   cursor: pointer;
-  transition: border-color 130ms ease, box-shadow 130ms ease, transform 130ms ease;
+  stroke: none;
+  transition: filter 130ms ease, opacity 130ms ease;
+  vector-effect: non-scaling-stroke;
 }
 
-.state-tile::after {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 0.35rem;
-  height: 42%;
-  background: var(--deaths);
-  content: "";
-  opacity: var(--tile-intensity);
-  transform: scaleY(var(--tile-intensity));
-  transform-origin: bottom;
+.state-map-shape:hover,
+.state-map-shape:focus-visible {
+  outline: none;
+  filter: brightness(0.9);
 }
 
-.state-tile:hover {
-  z-index: 2;
-  border-color: var(--ink);
-  box-shadow: 0 0 0 2px var(--paper-light), 0 0 0 3px var(--ink);
-  transform: translateY(-2px);
+.state-map-borders,
+.state-map-nation,
+.state-map-selected-outline path,
+.state-map-focus-outline path {
+  fill: none;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
 }
 
-.state-tile.is-selected {
-  z-index: 1;
-  border-color: var(--deaths-dark);
-  box-shadow: inset 0 0 0 2px var(--paper-light), inset 0 0 0 4px var(--deaths);
+.state-map-borders {
+  stroke: rgba(21, 25, 30, 0.65);
+  stroke-width: 1;
 }
 
-.state-tile strong {
-  position: relative;
-  z-index: 1;
-  width: fit-content;
-  padding: 0.12rem 0.18rem;
-  background: rgba(255, 253, 247, 0.84);
+.state-map-selected-outline path {
+  stroke: var(--deaths);
+  stroke-width: 3;
+}
+
+.state-map-focus-outline path {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.state-map-nation {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.state-map-detail {
+  display: flex;
+  min-width: 0;
+  padding: clamp(1rem, 2.3vw, 1.8rem);
+  flex-direction: column;
+}
+
+.state-map-detail > span {
+  color: var(--deaths);
   font-family: var(--mono);
-  font-size: clamp(0.58rem, 0.9vw, 0.82rem);
-  letter-spacing: 0.04em;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.state-map-detail h3 {
+  margin: 0.7rem 0 0;
+  font-family: var(--serif);
+  font-size: clamp(1.65rem, 3vw, 2.45rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
   line-height: 1;
 }
 
-.state-tile span {
-  position: relative;
-  z-index: 1;
-  width: fit-content;
-  overflow: hidden;
-  padding-right: 0.2rem;
-  background: rgba(255, 253, 247, 0.84);
+.state-map-detail h3 + p {
+  margin: 0.55rem 0 0;
+  color: var(--ink-faint);
   font-family: var(--mono);
-  font-size: clamp(0.47rem, 0.65vw, 0.62rem);
+  font-size: 0.65rem;
+}
+
+.state-map-detail > strong {
+  margin-top: 1.65rem;
+  color: var(--cases-dark);
+  font-family: var(--serif);
+  font-size: clamp(2.35rem, 4.8vw, 4.2rem);
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
-  line-height: 1;
-  text-overflow: ellipsis;
+  letter-spacing: -0.055em;
+  line-height: 0.9;
+}
+
+.state-map-detail > small {
+  margin-top: 0.65rem;
+  color: var(--ink-faint);
+  font-size: 0.65rem;
+  line-height: 1.45;
+}
+
+.state-map-detail > button {
+  width: 100%;
+  margin-top: 1.4rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--ink);
+  color: var(--paper-light);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.state-map-detail > time {
+  margin-top: auto;
+  padding-top: 1.2rem;
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+}
+
+.state-map-status {
+  display: grid;
+  place-items: center;
+  min-height: clamp(19rem, 40vw, 34rem);
+  border: 1px solid var(--ink);
+  background: var(--paper-light);
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  text-align: center;
+}
+
+.state-map-status > span {
+  width: min(18rem, 70%);
+  height: 2px;
+  background: linear-gradient(90deg, var(--paper-deep), var(--cases), var(--paper-deep));
+  animation: loading-line 1.4s ease-in-out infinite alternate;
+}
+
+.state-map-status.is-error {
+  align-content: center;
+  gap: 1rem;
+}
+
+.state-map-status.is-error p {
+  margin: 0;
+}
+
+.state-map-status.is-error button {
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: var(--ink);
+  color: var(--paper-light);
+  cursor: pointer;
 }
 
 .map-legend {
@@ -1503,7 +1599,7 @@ button {
 
 .mobility-ledger {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: minmax(18rem, 1.25fr) repeat(3, minmax(0, 1fr));
   margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
   border-top: 1px solid var(--ink);
   border-bottom: 1px solid var(--ink);
@@ -1702,6 +1798,10 @@ button {
 
   .mobility-figure-heading-plain h3 {
     font-size: clamp(2.2rem, 4.4vw, 4.1rem);
+  }
+
+  .mobility-ledger > div:first-child strong {
+    white-space: nowrap;
   }
 }
 
@@ -2576,19 +2676,28 @@ button {
 
   .map-layout > div:first-child {
     margin-right: 0;
-    padding-right: 0.5rem;
+    padding-right: 0;
+    overflow: visible;
+  }
+
+  .state-map-frame {
+    grid-template-columns: 1fr;
+  }
+
+  .state-map-visual {
     overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--ink);
     scrollbar-color: var(--cases) var(--paper-light);
   }
 
-  .tile-map {
-    width: 45rem;
-    aspect-ratio: 12 / 6.6;
-    grid-template-rows: repeat(7, minmax(3.15rem, 1fr));
+  .state-map-svg,
+  .state-map-visual .map-legend {
+    min-width: 38rem;
   }
 
-  .map-legend {
-    width: 45rem;
+  .state-map-detail {
+    min-height: 15rem;
   }
 
   .comparison-toolbar {
@@ -3002,10 +3111,12 @@ button {
 }
 
 @media (forced-colors: active) {
-  .state-tile,
-  .state-tile.is-selected {
-    border: 2px solid ButtonText;
-    box-shadow: none;
+  .state-map-shape {
+    fill: Canvas;
+  }
+
+  .state-map-selected-outline path {
+    stroke: Highlight;
   }
 
   .rank-bar::before,

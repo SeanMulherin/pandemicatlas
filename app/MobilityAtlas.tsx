@@ -659,7 +659,7 @@ export default function MobilityAtlas({
         <div className="section-heading-copy">
           <h2>Human Mobility Patterns</h2>
           <p>
-            We define human mobility to mean the origin-to-destination movement inferred from
+            Human mobility is defined here as the origin-to-destination movement inferred from
             anonymous cellphone-location visits, thereby accounting for all modes of
             transportation. Data represent ~10% of the U.S. population.
           </p>
