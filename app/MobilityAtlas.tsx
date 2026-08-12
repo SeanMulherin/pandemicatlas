@@ -597,10 +597,12 @@ function CountyBalance({
 export default function MobilityAtlas({
   covidSeries,
   covidMetric,
+  onCovidMetricChange,
   onSectionPositionChange,
 }: {
   covidSeries: MobilityCovidDatum[];
   covidMetric: "cases" | "deaths";
+  onCovidMetricChange: (metric: "cases" | "deaths") => void;
   onSectionPositionChange: (sectionTop: number | null) => void;
 }) {
   const mobilitySectionRef = useRef<HTMLElement>(null);
@@ -764,6 +766,7 @@ export default function MobilityAtlas({
         onFocusState={setFocusState}
         covidSeries={covidSeries}
         covidMetric={covidMetric}
+        onCovidMetricChange={onCovidMetricChange}
         timelineHost={timelineHost}
       />
 

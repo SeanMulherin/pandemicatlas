@@ -1152,6 +1152,7 @@ export function CovidAtlas() {
       <MobilityAtlas
         covidSeries={data.national}
         covidMetric={metric}
+        onCovidMetricChange={setMetric}
         onSectionPositionChange={updateExplorerControlHandoff}
       />
 

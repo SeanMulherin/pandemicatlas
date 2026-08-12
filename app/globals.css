@@ -2138,12 +2138,70 @@ button {
 
 .mobility-lag-control {
   display: grid;
-  grid-template-columns: minmax(16rem, 0.8fr) minmax(0, 1fr);
+  grid-template-columns: minmax(8rem, 0.38fr) minmax(16rem, 0.82fr) minmax(0, 1fr);
   gap: 1.5rem;
   align-items: center;
   padding: 0.9rem 1rem;
   border-bottom: 1px solid var(--ink);
   background: rgba(236, 229, 215, 0.58);
+}
+
+.mobility-lag-metric {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.mobility-lag-metric legend {
+  margin-bottom: 0.35rem;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.mobility-lag-metric > div {
+  display: flex;
+  border: 1px solid var(--ink);
+  background: var(--paper-light);
+}
+
+.mobility-lag-metric button {
+  flex: 1 1 50%;
+  min-height: 2.35rem;
+  padding: 0.5rem 0.65rem;
+  border: 0;
+  border-right: 1px solid var(--rule);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.61rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.mobility-lag-metric button:last-child {
+  border-right: 0;
+}
+
+.mobility-lag-metric button:hover {
+  background: var(--paper-deep);
+  color: var(--ink);
+}
+
+.mobility-lag-metric button.is-cases[aria-pressed="true"] {
+  background: var(--cases-dark);
+  color: var(--paper-light);
+}
+
+.mobility-lag-metric button.is-deaths[aria-pressed="true"] {
+  background: var(--deaths-dark);
+  color: var(--paper-light);
 }
 
 .mobility-lag-control label {

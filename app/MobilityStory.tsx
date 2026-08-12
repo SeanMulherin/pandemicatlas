@@ -115,6 +115,7 @@ interface MobilityStoryProps {
   onFocusState: (state: string) => void;
   covidSeries: MobilityCovidDatum[];
   covidMetric: CovidMetric;
+  onCovidMetricChange: (metric: CovidMetric) => void;
   timelineHost: HTMLElement | null;
 }
 
@@ -726,10 +727,27 @@ function pearson(points: LagPoint[]): number {
   return xSquares > 0 && ySquares > 0 ? numerator / Math.sqrt(xSquares * ySquares) : 0;
 }
 
+function niceAxisTicks(minimum: number, maximum: number, targetCount = 6): number[] {
+  const span = Math.max(1, maximum - minimum);
+  const roughStep = span / Math.max(1, targetCount);
+  const magnitude = 10 ** Math.floor(Math.log10(roughStep));
+  const normalized = roughStep / magnitude;
+  const multiplier = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  const step = multiplier * magnitude;
+  const first = Math.ceil(minimum / step) * step;
+  const precision = Math.max(0, -Math.floor(Math.log10(step)));
+  const ticks: number[] = [];
+  for (let value = first; value <= maximum + step * 0.001; value += step) {
+    ticks.push(Number(value.toFixed(precision)));
+  }
+  return ticks;
+}
+
 function MobilityIncidenceLagExplorer({
   pulse,
   covidSeries,
   covidMetric,
+  onCovidMetricChange,
   lagWeeks,
   weekIndex,
   onLagWeeks,
@@ -738,6 +756,7 @@ function MobilityIncidenceLagExplorer({
   pulse: PulseRow[];
   covidSeries: MobilityCovidDatum[];
   covidMetric: CovidMetric;
+  onCovidMetricChange: (metric: CovidMetric) => void;
   lagWeeks: number;
   weekIndex: number;
   onLagWeeks: (lag: number) => void;
@@ -806,6 +825,21 @@ function MobilityIncidenceLagExplorer({
       context.textBaseline = "middle";
       context.fillText(yValue.toFixed(yValue < 10 ? 1 : 0), margin.left - 8, y);
     }
+
+    niceAxisTicks(xMinimum, xMaximum, 8).forEach((tickValue) => {
+      const x = margin.left
+        + ((tickValue - xMinimum) / Math.max(1, xMaximum - xMinimum)) * width;
+      context.strokeStyle = RULE;
+      context.beginPath();
+      context.moveTo(x, margin.top + height);
+      context.lineTo(x, margin.top + height + 5);
+      context.stroke();
+      context.fillStyle = INK_FAINT;
+      context.font = "9px SFMono-Regular, Consolas, monospace";
+      context.textAlign = "center";
+      context.textBaseline = "top";
+      context.fillText(String(tickValue), x, margin.top + height + 8);
+    });
 
     const baselineX = margin.left + ((100 - xMinimum) / Math.max(1, xMaximum - xMinimum)) * width;
     context.setLineDash([5, 5]);
@@ -890,6 +924,22 @@ function MobilityIncidenceLagExplorer({
     <div className="mobility-lag-grid">
       <div className="mobility-canvas-shell">
         <div className="mobility-lag-control">
+          <fieldset className="mobility-lag-metric">
+            <legend>Outcome</legend>
+            <div>
+              {(["cases", "deaths"] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={`is-${option}`}
+                  aria-pressed={covidMetric === option}
+                  onClick={() => onCovidMetricChange(option)}
+                >
+                  {option === "cases" ? "Cases" : "Deaths"}
+                </button>
+              ))}
+            </div>
+          </fieldset>
           <label>
             <span>Incidence lag</span>
             <input
@@ -902,14 +952,14 @@ function MobilityIncidenceLagExplorer({
             />
             <strong>{lagWeeks} {lagWeeks === 1 ? "week" : "weeks"}</strong>
           </label>
-          <p>Mobility at week t is compared with incidence at week t + lag.</p>
+          <p>Mobility at week t is compared with national incidence at week t + lag.</p>
         </div>
         <canvas
           ref={canvasRef}
           className="mobility-lag-canvas"
           role="img"
           tabIndex={0}
-          aria-label={`Scatterplot comparing weekly cross-county mobility with national reported ${covidMetric} per 100,000 residents ${lagWeeks} weeks later. Click a point to select its mobility week.`}
+          aria-label={`Scatterplot comparing weekly cross-county mobility with national reported ${covidMetric} per 100,000 residents ${lagWeeks} weeks later. The mobility index uses the corresponding 2019 week as a baseline of 100. Click a point to select its mobility week.`}
           onPointerDown={selectNearest}
           onKeyDown={(event) => {
             if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
@@ -953,6 +1003,7 @@ export default function MobilityStory({
   onFocusState,
   covidSeries,
   covidMetric,
+  onCovidMetricChange,
   timelineHost,
 }: MobilityStoryProps) {
   const firstFigureRef = useRef<HTMLElement>(null);
@@ -1162,9 +1213,14 @@ export default function MobilityStory({
           <div>
             <h3>Mobility–Incidence Lag Explorer</h3>
             <p>
-              Compare the weekly cross-county mobility index at time t with national reported
-              {` ${covidMetric}`} incidence 0–8 weeks later. The active cases/deaths metric at the
-              top of the atlas controls this view.
+              Each point pairs one national week of cross-county mobility at time t with national
+              reported cases or deaths per 100,000 residents 0–8 weeks later. The mobility index
+              represents detected movements between different counties and is normalized to the
+              corresponding week in the 2019 archive, where 100 equals that baseline. Only pairs
+              with all seven lagged COVID-19 dates are retained. The displayed r is the unadjusted
+              Pearson correlation and the gold line is a simple linear fit; both are descriptive
+              associations, not causal estimates. This view remains national and per 100,000
+              regardless of state, county, period, or view selections elsewhere in the atlas.
             </p>
           </div>
         </div>
@@ -1172,6 +1228,7 @@ export default function MobilityStory({
           pulse={assets.metadata.pulse}
           covidSeries={covidSeries}
           covidMetric={covidMetric}
+          onCovidMetricChange={onCovidMetricChange}
           lagWeeks={lagWeeks}
           weekIndex={weekIndex}
           onLagWeeks={setLagWeeks}
