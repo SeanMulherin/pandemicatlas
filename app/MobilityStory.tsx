@@ -1082,7 +1082,7 @@ export default function MobilityStory({
         <article className="mobility-figure mobility-dynamic-figure" ref={firstFigureRef}>
           <div className="mobility-figure-heading mobility-figure-heading-plain">
             <div>
-              <h3>Animated County Flow Map</h3>
+              <h3>Mobility Flow Map</h3>
               <p>
                 Weekly county movement is loading for the animated map.
               </p>
@@ -1115,7 +1115,7 @@ export default function MobilityStory({
       <article className="mobility-figure mobility-dynamic-figure" ref={firstFigureRef}>
         <div className="mobility-figure-heading mobility-figure-heading-plain mobility-heading-with-date">
           <div>
-            <h3>Animated County Flow Map</h3>
+            <h3>Mobility Flow Map</h3>
             <p>
               Net cross-county balance for every county. Blue indicates more inbound than
               outbound observations; red indicates the reverse. Play the weekly control above

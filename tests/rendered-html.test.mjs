@@ -487,7 +487,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityAtlas, /not unique individuals/);
   assert.doesNotMatch(mobilityAtlas, /05<\/span> Human mobility|01 \/ Interstate network|02 \/ County hubs/);
   const mobilityStoryTitles = [
-    "Animated County Flow Map",
+    "Mobility Flow Map",
     "County Mobility Spotlight",
     "Mobility–Incidence Lag Explorer",
   ];
