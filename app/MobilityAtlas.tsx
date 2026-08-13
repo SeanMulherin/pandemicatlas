@@ -349,7 +349,7 @@ function FlowWheel({
         />
         <div className="mobility-chart-key" aria-hidden="true">
           <span><i className="is-teal" />Leading interstate ties</span>
-          <span><i className="is-red" />Focused state</span>
+          <span><i className="is-red" />Selected state</span>
         </div>
       </div>
       <aside className="mobility-detail-panel" aria-live="polite">
@@ -387,6 +387,7 @@ function CountyBalance({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dimensions = useCanvasDimensions(canvasRef);
+  const scopeLabel = focusState === ALL_STATES ? "the United States" : focusState;
   const filteredCounties = useMemo(
     () => focusState === ALL_STATES ? counties : counties.filter((county) => county.state === focusState),
     [counties, focusState],
@@ -551,7 +552,7 @@ function CountyBalance({
           className="county-balance-canvas"
           role="img"
           tabIndex={0}
-          aria-label={`Interactive county inbound versus outbound mobility plot for ${focusState}. Hover or select a county; use arrow keys to move through counties.`}
+          aria-label={`Interactive county inbound versus outbound mobility plot for ${scopeLabel}. Hover or select a county; use arrow keys to move through counties.`}
           onPointerMove={(event) => setHoveredFips(countyAtPointer(event))}
           onPointerLeave={() => setHoveredFips("")}
           onClick={(event) => {
@@ -609,7 +610,13 @@ export default function MobilityAtlas({
   const [data, setData] = useState<MobilityData | null>(null);
   const [error, setError] = useState("");
   const [focusState, setFocusState] = useState(ALL_STATES);
+  const [lastSelectedState, setLastSelectedState] = useState("");
   const [timelineHost, setTimelineHost] = useState<HTMLDivElement | null>(null);
+
+  const handleFocusState = useCallback((state: string) => {
+    if (state !== ALL_STATES) setLastSelectedState(state);
+    setFocusState(state);
+  }, []);
 
   useEffect(() => {
     let animationFrame = 0;
@@ -729,7 +736,7 @@ export default function MobilityAtlas({
           <div>
             <h3>Where state borders were most porous</h3>
             <p>
-              The 75 largest two-way interstate ties are shown. Focus a state to reveal its
+              The 75 largest two-way interstate ties are shown. Select a state to reveal its
               strongest links; line weight represents cumulative traveler observations.
             </p>
           </div>
@@ -739,7 +746,7 @@ export default function MobilityAtlas({
           states={stateNames}
           stateRows={data.states}
           focusState={focusState}
-          onFocusState={setFocusState}
+          onFocusState={handleFocusState}
         />
       </article>
 
@@ -753,6 +760,33 @@ export default function MobilityAtlas({
             </p>
           </div>
         </div>
+        <div className="county-scope-control">
+          <span id="county-scope-label">View scope</span>
+          <div
+            className="county-scope-toggle"
+            role="group"
+            aria-labelledby="county-scope-label"
+          >
+            <button
+              type="button"
+              aria-pressed={focusState === ALL_STATES}
+              onClick={() => handleFocusState(ALL_STATES)}
+            >
+              National
+            </button>
+            <button
+              type="button"
+              aria-label={lastSelectedState
+                ? `Selected State: ${lastSelectedState}`
+                : "Selected State (select a state in the interstate wheel first)"}
+              aria-pressed={focusState !== ALL_STATES}
+              disabled={!lastSelectedState}
+              onClick={() => handleFocusState(lastSelectedState)}
+            >
+              Selected State
+            </button>
+          </div>
+        </div>
         <CountyBalance counties={data.counties} focusState={focusState} />
       </article>
 
@@ -763,7 +797,7 @@ export default function MobilityAtlas({
       <MobilityStory
         counties={data.counties}
         focusState={focusState}
-        onFocusState={setFocusState}
+        onFocusState={handleFocusState}
         covidSeries={covidSeries}
         covidMetric={covidMetric}
         onCovidMetricChange={onCovidMetricChange}

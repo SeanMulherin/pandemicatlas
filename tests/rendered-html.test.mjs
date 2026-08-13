@@ -448,7 +448,37 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityAtlas, /daily county release ends Apr\. 15, 2021/);
   assert.match(mobilityAtlas, /weekly county release continues/);
   assert.match(mobilityAtlas, /Where state borders were most porous/);
+  assert.match(
+    mobilityAtlas,
+    /The 75 largest two-way interstate ties are shown\. Select a state to reveal its/,
+  );
+  assert.doesNotMatch(mobilityAtlas, /Focus a state to reveal|Focused state/);
+  assert.match(mobilityAtlas, /<span><i className="is-red" \/>Selected state<\/span>/);
   assert.match(mobilityAtlas, /Which counties pulled travel in—or pushed it out/);
+  assert.match(mobilityAtlas, /const \[lastSelectedState, setLastSelectedState\]/);
+  assert.match(mobilityAtlas, /if \(state !== ALL_STATES\) setLastSelectedState\(state\)/);
+  assert.match(mobilityAtlas, /role="group"\s+aria-labelledby="county-scope-label"/);
+  assert.match(mobilityAtlas, /aria-pressed=\{focusState === ALL_STATES\}/);
+  assert.match(mobilityAtlas, /aria-pressed=\{focusState !== ALL_STATES\}/);
+  assert.match(mobilityAtlas, /onClick=\{\(\) => handleFocusState\(ALL_STATES\)\}/);
+  assert.match(mobilityAtlas, /onClick=\{\(\) => handleFocusState\(lastSelectedState\)\}/);
+  assert.match(mobilityAtlas, /disabled=\{!lastSelectedState\}/);
+  assert.ok(
+    mobilityAtlas.indexOf('id="county-scope-label"')
+      < mobilityAtlas.indexOf("<CountyBalance"),
+  );
+  assert.match(
+    styles,
+    /\.county-scope-toggle button\[aria-pressed="true"\]\s*\{[^}]*background:\s*var\(--ink\);/,
+  );
+  assert.match(
+    styles,
+    /\.county-scope-toggle button:disabled\s*\{[^}]*cursor:\s*not-allowed;[^}]*opacity:\s*0\.42;/,
+  );
+  assert.match(
+    narrowMobilityCss,
+    /\.county-scope-control\s*\{[^}]*flex-direction:\s*column;/,
+  );
   assert.match(mobilityAtlas, /<MobilityStory/);
   assert.match(
     mobilityAtlas,
@@ -636,6 +666,17 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.equal(mobility.meta.countyCount, 3_142);
   assert.equal(mobility.meta.stateCount, 51);
   assert.equal(mobility.statePairs.length, 1_275);
+  assert.deepEqual(
+    mobility.statePairs,
+    mobility.statePairs.slice().sort((a, b) => b.value - a.value),
+  );
+  const interstateTotal = mobility.statePairs.reduce((sum, pair) => sum + pair.value, 0);
+  const leadingInterstateTotal = mobility.statePairs
+    .slice(0, 75)
+    .reduce((sum, pair) => sum + pair.value, 0);
+  assert.equal(interstateTotal, mobility.meta.interstateObserved);
+  assert.equal(leadingInterstateTotal, 1_048_274_559);
+  assert.ok(Math.abs((leadingInterstateTotal / interstateTotal) - 0.5748) < 0.0001);
   assert.equal(mobility.counties.length, 3_142);
   assert.equal(mobility.quality.malformedRows, 0);
   assert.equal(mobility.quality.negativeValueRows, 0);
