@@ -4,17 +4,6 @@
 156 county-level weeks in the official Kang/GeoDS weekly-flow repository. The
 published ranges run from January 7, 2019 through January 2, 2022.
 
-The build also emits two compact temporal archives:
-
-- `mobility-weekly.bin` stores weekly county inbound and outbound totals.
-- `mobility-state-pairs.bin` stores all 1,275 undirected interstate state pairs
-  in week-major order. The client cumulatively draws these observed weekly
-  flows from an empty network to the complete-archive wheel; the final binary
-  sums are required to reconcile exactly with `mobility.json.statePairs`.
-
-`mobility-dynamics.json` records the binary identities, dimensions, field
-definitions, and shared 156-week date index used to validate both archives.
-
 The script clones the source as a compressed bare Git repository and streams
 each CSV from the Git object database. It does not expand or retain the roughly
 11 GB of raw CSV files.
@@ -28,8 +17,7 @@ Rscript analysis/prepare_kang_mobility_all.R
 Set `KANG_CACHE_DIR` to choose a persistent cache location, or use
 `--repo=/path/to/COVID19USFlows-WeeklyFlows.git` to reuse an existing bare
 clone. `--output=` and `--labels=` override the generated JSON path and the
-existing atlas JSON used for county display names. `--dynamics=`, `--binary=`,
-and `--state-pair-binary=` override the temporal output paths.
+existing atlas JSON used for county display names.
 
 The atlas intentionally reports `visitor_flows`, the detected SafeGraph sample,
 rather than `pop_flows`, the population-inferred estimate. The build replaces

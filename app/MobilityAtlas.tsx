@@ -76,37 +76,6 @@ interface MobilityData {
   counties: MobilityCounty[];
 }
 
-interface MobilityPulseWeek {
-  weekStart: string;
-  weekEnd: string;
-  interstateObserved: number;
-}
-
-interface StatePairArchiveMeta {
-  url: string;
-  buildId: string;
-  binaryHeaderBytes: number;
-  binaryBytes: number;
-  weekCount: number;
-  pairCount: number;
-}
-
-interface MobilityDynamicsData {
-  pulse: MobilityPulseWeek[];
-  statePairArchive: StatePairArchiveMeta;
-}
-
-interface StatePairTemporalArchive {
-  weeks: MobilityPulseWeek[];
-  weekCount: number;
-  pairCount: number;
-  cumulativeValues: Float64Array;
-}
-
-interface TemporalStatePair extends StatePair {
-  cumulativeValue: number;
-}
-
 interface CanvasDimensions {
   width: number;
   height: number;
@@ -120,8 +89,6 @@ const PAPER = "#fffdf7";
 const TEAL = "#006d77";
 const RED = "#a9363e";
 const GOLD = "#8a5a00";
-const FLOW_WHEEL_PLAYBACK_INTERVAL_MS = 120;
-const FLOW_WHEEL_PAIR_COUNT = 75;
 
 const STATE_ABBREVIATIONS: Record<string, string> = {
   Alabama: "AL", Alaska: "AK", Arizona: "AZ", Arkansas: "AR", California: "CA",
@@ -164,95 +131,6 @@ function formatInteger(value: number): string {
 
 function formatDate(value: string): string {
   return dateFormatter.format(new Date(`${value}T00:00:00Z`));
-}
-
-function decodeStatePairArchive(
-  buffer: ArrayBuffer,
-  metadata: StatePairArchiveMeta,
-  weeks: MobilityPulseWeek[],
-  pairs: StatePair[],
-): StatePairTemporalArchive {
-  if (metadata.weekCount !== weeks.length || metadata.pairCount !== pairs.length) {
-    throw new Error("Weekly interstate metadata does not match the mobility archive");
-  }
-  if (buffer.byteLength !== metadata.binaryBytes) {
-    throw new Error("Weekly interstate binary has an unexpected size");
-  }
-  const header = new Uint8Array(buffer, 0, metadata.binaryHeaderBytes);
-  const buildId = [...header].map((value) => value.toString(16).padStart(2, "0")).join("");
-  if (buildId !== metadata.buildId) {
-    throw new Error("Weekly interstate binary identity does not match its metadata");
-  }
-  const expectedBytes = metadata.binaryHeaderBytes
-    + metadata.weekCount * metadata.pairCount * Uint32Array.BYTES_PER_ELEMENT;
-  if (buffer.byteLength !== expectedBytes) {
-    throw new Error("Weekly interstate binary dimensions are inconsistent");
-  }
-
-  const view = new DataView(buffer, metadata.binaryHeaderBytes);
-  const cumulativeValues = new Float64Array((metadata.weekCount + 1) * metadata.pairCount);
-  for (let weekIndex = 0; weekIndex < metadata.weekCount; weekIndex += 1) {
-    let weeklyTotal = 0;
-    const previousOffset = weekIndex * metadata.pairCount;
-    const currentOffset = (weekIndex + 1) * metadata.pairCount;
-    for (let pairIndex = 0; pairIndex < metadata.pairCount; pairIndex += 1) {
-      const binaryOffset = (weekIndex * metadata.pairCount + pairIndex)
-        * Uint32Array.BYTES_PER_ELEMENT;
-      const weeklyValue = view.getUint32(binaryOffset, true);
-      weeklyTotal += weeklyValue;
-      cumulativeValues[currentOffset + pairIndex] =
-        cumulativeValues[previousOffset + pairIndex] + weeklyValue;
-    }
-    if (weeklyTotal !== weeks[weekIndex].interstateObserved) {
-      throw new Error(`Weekly interstate total does not reconcile at week ${weekIndex + 1}`);
-    }
-  }
-  const finalOffset = metadata.weekCount * metadata.pairCount;
-  pairs.forEach((pair, pairIndex) => {
-    if (cumulativeValues[finalOffset + pairIndex] !== pair.value) {
-      throw new Error(`Weekly interstate pair does not reconcile: ${pair.source}–${pair.target}`);
-    }
-  });
-
-  return {
-    weeks,
-    weekCount: metadata.weekCount,
-    pairCount: metadata.pairCount,
-    cumulativeValues,
-  };
-}
-
-function quadraticPoint(
-  source: { x: number; y: number },
-  control: { x: number; y: number },
-  target: { x: number; y: number },
-  progress: number,
-) {
-  const inverse = 1 - progress;
-  return {
-    x: inverse * inverse * source.x + 2 * inverse * progress * control.x
-      + progress * progress * target.x,
-    y: inverse * inverse * source.y + 2 * inverse * progress * control.y
-      + progress * progress * target.y,
-  };
-}
-
-function tracePartialQuadratic(
-  context: CanvasRenderingContext2D,
-  source: { x: number; y: number },
-  control: { x: number; y: number },
-  target: { x: number; y: number },
-  start: number,
-  end: number,
-) {
-  const segments = Math.max(2, Math.ceil(Math.abs(end - start) * 36));
-  const first = quadraticPoint(source, control, target, start);
-  context.moveTo(first.x, first.y);
-  for (let segment = 1; segment <= segments; segment += 1) {
-    const progress = start + ((end - start) * segment) / segments;
-    const point = quadraticPoint(source, control, target, progress);
-    context.lineTo(point.x, point.y);
-  }
 }
 
 function useCanvasDimensions(ref: React.RefObject<HTMLCanvasElement | null>): CanvasDimensions {
@@ -313,16 +191,12 @@ function wheelPositions(states: string[], dimensions: CanvasDimensions) {
 
 function FlowWheel({
   pairs,
-  temporalArchive,
-  frame,
   states,
   stateRows,
   focusState,
   onFocusState,
 }: {
   pairs: StatePair[];
-  temporalArchive: StatePairTemporalArchive;
-  frame: number;
   states: string[];
   stateRows: MobilityState[];
   focusState: string;
@@ -333,27 +207,16 @@ function FlowWheel({
   const [hoveredState, setHoveredState] = useState("");
   const activeState = hoveredState || (focusState === ALL_STATES ? "" : focusState);
 
-  const temporalPairs = useMemo<TemporalStatePair[]>(() => {
-    const safeFrame = Math.max(0, Math.min(frame, temporalArchive.weekCount));
-    const offset = safeFrame * temporalArchive.pairCount;
-    return pairs.map((pair, pairIndex) => ({
-      ...pair,
-      cumulativeValue: temporalArchive.cumulativeValues[offset + pairIndex] ?? 0,
-    }));
-  }, [frame, pairs, temporalArchive]);
-
   const visiblePairs = useMemo(() => {
     const selected = focusState === ALL_STATES
       ? []
-      : temporalPairs
-        .filter((pair) => pair.source === focusState || pair.target === focusState)
-        .slice(0, 28);
-    const merged = new Map<string, TemporalStatePair>();
-    [...temporalPairs.slice(0, FLOW_WHEEL_PAIR_COUNT), ...selected].forEach((pair) => {
+      : pairs.filter((pair) => pair.source === focusState || pair.target === focusState).slice(0, 28);
+    const merged = new Map<string, StatePair>();
+    [...pairs.slice(0, 75), ...selected].forEach((pair) => {
       merged.set(`${pair.source}|${pair.target}`, pair);
     });
     return [...merged.values()].sort((a, b) => a.value - b.value);
-  }, [focusState, temporalPairs]);
+  }, [focusState, pairs]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -369,22 +232,19 @@ function FlowWheel({
     visiblePairs.forEach((pair) => {
       const source = positions.get(pair.source);
       const target = positions.get(pair.target);
-      if (!source || !target || pair.cumulativeValue <= 0 || pair.value <= 0) return;
+      if (!source || !target) return;
       const isActive = Boolean(
         activeState && (pair.source === activeState || pair.target === activeState),
       );
       const strength = Math.sqrt(pair.value / maximum);
-      const completion = Math.min(1, pair.cumulativeValue / pair.value);
-      const control = { x: dimensions.width / 2, y: dimensions.height / 2 };
       context.beginPath();
-      if (completion >= 1) {
-        context.moveTo(source.x, source.y);
-        context.quadraticCurveTo(control.x, control.y, target.x, target.y);
-      } else {
-        const halfCompletion = completion / 2;
-        tracePartialQuadratic(context, source, control, target, 0, halfCompletion);
-        tracePartialQuadratic(context, source, control, target, 1, 1 - halfCompletion);
-      }
+      context.moveTo(source.x, source.y);
+      context.quadraticCurveTo(
+        dimensions.width / 2,
+        dimensions.height / 2,
+        target.x,
+        target.y,
+      );
       context.strokeStyle = isActive
         ? `rgba(169, 54, 62, ${0.38 + strength * 0.55})`
         : `rgba(0, 109, 119, ${0.045 + strength * 0.2})`;
@@ -466,21 +326,9 @@ function FlowWheel({
     ? stateRows.find((row) => row.state === activeState)
     : stateRows.slice().sort((a, b) => b.interstateTotal - a.interstateTotal)[0];
   const detailName = detailState?.state ?? states[0];
-  const statePairs = temporalPairs
-    .filter((pair) => pair.source === detailName || pair.target === detailName);
-  const cumulativeStateTotal = statePairs.reduce((sum, pair) => sum + pair.cumulativeValue, 0);
-  const completeStateTotal = statePairs.reduce((sum, pair) => sum + pair.value, 0);
-  const cumulativeShare = completeStateTotal > 0
-    ? Math.round((cumulativeStateTotal / completeStateTotal) * 100)
-    : 0;
-  const topConnections = statePairs
-    .slice()
-    .sort((a, b) => b.cumulativeValue - a.cumulativeValue || b.value - a.value)
+  const topConnections = pairs
+    .filter((pair) => pair.source === detailName || pair.target === detailName)
     .slice(0, 5);
-  const currentWeek = frame > 0 ? temporalArchive.weeks[frame - 1] : null;
-  const canvasLabel = frame === 0
-    ? "Temporal interstate mobility wheel. No interstate ties are drawn yet. Use Play or the slider to build the network. Hover or select a state; use arrow keys to move between states and Escape to reset."
-    : `Temporal interstate mobility wheel showing cumulative two-way movement through ${formatDate(currentWeek?.weekEnd ?? "")}. Line completion shows each tie's accumulated share of the full archive. Hover or select a state; use arrow keys to move between states and Escape to reset.`;
 
   return (
     <div className="mobility-figure-grid">
@@ -490,7 +338,7 @@ function FlowWheel({
           className="flow-wheel-canvas"
           role="img"
           tabIndex={0}
-          aria-label={canvasLabel}
+          aria-label="Interactive interstate mobility wheel. Hover or select a state; use arrow keys to move between states and Escape to reset."
           onPointerMove={(event) => setHoveredState(stateAtPointer(event))}
           onPointerLeave={() => setHoveredState("")}
           onClick={(event) => {
@@ -500,7 +348,7 @@ function FlowWheel({
           onKeyDown={handleKeyDown}
         />
         <div className="mobility-chart-key" aria-hidden="true">
-          <span><i className="is-teal" />Accumulated share of complete tie</span>
+          <span><i className="is-teal" />Leading interstate ties</span>
           <span><i className="is-red" />Focused state</span>
         </div>
       </div>
@@ -508,27 +356,23 @@ function FlowWheel({
         <span className="mobility-detail-label">State focus</span>
         <h4>{detailName}</h4>
         <dl>
-          <div><dt>Cumulative two-way interstate</dt><dd>{formatCompact(cumulativeStateTotal)}</dd></div>
-          <div><dt>Share of complete archive</dt><dd>{cumulativeShare}%</dd></div>
-          <div><dt>Complete-archive two-way interstate</dt><dd>{formatCompact(completeStateTotal)}</dd></div>
+          <div><dt>Interstate inbound</dt><dd>{formatCompact(detailState?.interstateIn ?? 0)}</dd></div>
+          <div><dt>Interstate outbound</dt><dd>{formatCompact(detailState?.interstateOut ?? 0)}</dd></div>
+          <div><dt>Cross-county, within state</dt><dd>{formatCompact(detailState?.intrastateCrossCounty ?? 0)}</dd></div>
         </dl>
-        <p className="mobility-list-label">Largest ties accumulated so far</p>
-        {frame === 0 ? (
-          <p className="flow-wheel-empty-note">Play or scrub the timeline to begin drawing ties.</p>
-        ) : (
-          <ol className="mobility-flow-list">
-            {topConnections.map((pair) => {
-              const other = pair.source === detailName ? pair.target : pair.source;
-              return (
-                <li key={`${pair.source}-${pair.target}`}>
-                  <button type="button" onClick={() => onFocusState(other)}>
-                    <span>{other}</span><strong>{formatCompact(pair.cumulativeValue)}</strong>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        )}
+        <p className="mobility-list-label">Largest two-way interstate ties</p>
+        <ol className="mobility-flow-list">
+          {topConnections.map((pair) => {
+            const other = pair.source === detailName ? pair.target : pair.source;
+            return (
+              <li key={`${pair.source}-${pair.target}`}>
+                <button type="button" onClick={() => onFocusState(other)}>
+                  <span>{other}</span><strong>{formatCompact(pair.value)}</strong>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
       </aside>
     </div>
   );
@@ -763,11 +607,8 @@ export default function MobilityAtlas({
 }) {
   const mobilitySectionRef = useRef<HTMLElement>(null);
   const [data, setData] = useState<MobilityData | null>(null);
-  const [temporalArchive, setTemporalArchive] = useState<StatePairTemporalArchive | null>(null);
   const [error, setError] = useState("");
   const [focusState, setFocusState] = useState(ALL_STATES);
-  const [flowFrame, setFlowFrame] = useState(0);
-  const [isFlowPlaying, setIsFlowPlaying] = useState(false);
   const [timelineHost, setTimelineHost] = useState<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -806,38 +647,13 @@ export default function MobilityAtlas({
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      fetch("/data/mobility.json"),
-      fetch("/data/mobility-dynamics.json"),
-    ])
-      .then(async ([mobilityResponse, dynamicsResponse]) => {
-        if (!mobilityResponse.ok) {
-          throw new Error(`Mobility data request failed (${mobilityResponse.status})`);
-        }
-        if (!dynamicsResponse.ok) {
-          throw new Error(`Mobility timeline request failed (${dynamicsResponse.status})`);
-        }
-        const [payload, dynamics] = await Promise.all([
-          mobilityResponse.json() as Promise<MobilityData>,
-          dynamicsResponse.json() as Promise<MobilityDynamicsData>,
-        ]);
-        const archiveResponse = await fetch(dynamics.statePairArchive.url);
-        if (!archiveResponse.ok) {
-          throw new Error(`Interstate timeline request failed (${archiveResponse.status})`);
-        }
-        const archive = decodeStatePairArchive(
-          await archiveResponse.arrayBuffer(),
-          dynamics.statePairArchive,
-          dynamics.pulse,
-          payload.statePairs,
-        );
-        return { payload, archive };
+    fetch("/data/mobility.json")
+      .then((response) => {
+        if (!response.ok) throw new Error(`Mobility data request failed (${response.status})`);
+        return response.json() as Promise<MobilityData>;
       })
-      .then(({ payload, archive }) => {
-        if (!cancelled) {
-          setData(payload);
-          setTemporalArchive(archive);
-        }
+      .then((payload) => {
+        if (!cancelled) setData(payload);
       })
       .catch((reason: unknown) => {
         if (!cancelled) setError(reason instanceof Error ? reason.message : "Mobility data unavailable");
@@ -847,24 +663,12 @@ export default function MobilityAtlas({
     };
   }, []);
 
-  useEffect(() => {
-    if (!isFlowPlaying || !temporalArchive) return;
-    const timer = window.setInterval(() => {
-      setFlowFrame((current) => {
-        const next = Math.min(temporalArchive.weekCount, current + 1);
-        if (next >= temporalArchive.weekCount) setIsFlowPlaying(false);
-        return next;
-      });
-    }, FLOW_WHEEL_PLAYBACK_INTERVAL_MS);
-    return () => window.clearInterval(timer);
-  }, [isFlowPlaying, temporalArchive]);
-
   const stateNames = useMemo(
     () => data?.states.map((row) => row.state).sort((a, b) => a.localeCompare(b)) ?? [],
     [data],
   );
 
-  if (!data || !temporalArchive) {
+  if (!data) {
     return (
       <section className="atlas-section mobility-section" id="mobility" ref={mobilitySectionRef}>
         <div className="section-heading mobility-section-heading">
@@ -887,23 +691,6 @@ export default function MobilityAtlas({
     + data.quality.duplicatePairsWithinOrigin
     + data.quality.originBlockReentries
     + data.quality.countyLabelConflicts;
-  const currentFlowWeek = flowFrame > 0 ? temporalArchive.weeks[flowFrame - 1] : null;
-  const isFlowComplete = flowFrame >= temporalArchive.weekCount;
-  const flowReadout = currentFlowWeek
-    ? `Through ${formatDate(currentFlowWeek.weekEnd)}`
-    : "No lines yet";
-  const flowAriaValue = currentFlowWeek
-    ? `Cumulative through ${formatDate(currentFlowWeek.weekEnd)}`
-    : "No interstate ties drawn yet";
-
-  const toggleFlowPlayback = () => {
-    if (isFlowPlaying) {
-      setIsFlowPlaying(false);
-      return;
-    }
-    if (isFlowComplete) setFlowFrame(0);
-    setIsFlowPlaying(true);
-  };
 
   return (
     <section className="atlas-section mobility-section" id="mobility" ref={mobilitySectionRef}>
@@ -942,58 +729,13 @@ export default function MobilityAtlas({
           <div>
             <h3>Where state borders were most porous</h3>
             <p>
-              Play to accumulate the complete archive’s 75 strongest two-way interstate ties,
-              week by week, from Jan. 7, 2019 through Jan. 2, 2022. Line completion shows each
-              tie’s share of full-archive movement accumulated by the selected week; the final
-              frame reproduces the complete-archive view. Focus a state to reveal its strongest
-              links.
+              The 75 largest two-way interstate ties are shown. Focus a state to reveal its
+              strongest links; line weight represents cumulative traveler observations.
             </p>
           </div>
         </div>
-        <div
-          className="mobility-timeline flow-wheel-timeline"
-          role="group"
-          aria-label="Temporal interstate mobility animation controls"
-        >
-          <button
-            type="button"
-            onClick={toggleFlowPlayback}
-            aria-label={isFlowPlaying
-              ? "Pause interstate mobility animation"
-              : isFlowComplete
-                ? "Replay interstate mobility animation"
-                : "Play interstate mobility animation"}
-          >
-            <span aria-hidden="true">{isFlowPlaying ? "Ⅱ" : "▶"}</span>
-            {isFlowPlaying ? "Pause" : isFlowComplete ? "Replay" : "Play"}
-          </button>
-          <div className="mobility-timeline-readout" aria-live={isFlowPlaying ? "off" : "polite"}>
-            <span>{flowFrame === 0 ? "Archive build" : "Building through"}</span>
-            <strong>{flowReadout}</strong>
-          </div>
-          <label className="mobility-timeline-range">
-            <span className="sr-only">Interstate mobility accumulation week</span>
-            <span aria-hidden="true">No lines</span>
-            <input
-              type="range"
-              min={0}
-              max={temporalArchive.weekCount}
-              value={flowFrame}
-              aria-valuetext={flowAriaValue}
-              onChange={(event) => {
-                setIsFlowPlaying(false);
-                setFlowFrame(Number(event.target.value));
-              }}
-            />
-            <time dateTime={temporalArchive.weeks.at(-1)?.weekEnd}>
-              {formatDate(temporalArchive.weeks.at(-1)?.weekEnd ?? data.meta.coverageEnd)}
-            </time>
-          </label>
-        </div>
         <FlowWheel
           pairs={data.statePairs}
-          temporalArchive={temporalArchive}
-          frame={flowFrame}
           states={stateNames}
           stateRows={data.states}
           focusState={focusState}
