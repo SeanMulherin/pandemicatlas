@@ -123,6 +123,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     mobilityRaw,
     mobilityDynamicsRaw,
     mobilityWeekly,
+    mobilityStatePairsWeekly,
     countyMetadataRaw,
     countyValues,
     socialCard,
@@ -144,6 +145,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     readFile(new URL("../public/data/mobility.json", import.meta.url), "utf8"),
     readFile(new URL("../public/data/mobility-dynamics.json", import.meta.url), "utf8"),
     readFile(new URL("../public/data/mobility-weekly.bin", import.meta.url)),
+    readFile(new URL("../public/data/mobility-state-pairs.bin", import.meta.url)),
     readFile(new URL("../public/data/county-incidence-map.json", import.meta.url), "utf8"),
     readFile(new URL("../public/data/county-incidence.bin", import.meta.url)),
     readFile(new URL("../public/og.png", import.meta.url)),
@@ -448,6 +450,20 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityAtlas, /daily county release ends Apr\. 15, 2021/);
   assert.match(mobilityAtlas, /weekly county release continues/);
   assert.match(mobilityAtlas, /Where state borders were most porous/);
+  assert.match(mobilityAtlas, /Play to accumulate the complete archive’s 75 strongest two-way interstate ties/);
+  assert.match(mobilityAtlas, /the final\s*frame reproduces the complete-archive view/);
+  assert.match(mobilityAtlas, /Temporal interstate mobility animation controls/);
+  assert.match(mobilityAtlas, /Interstate mobility accumulation week/);
+  assert.match(mobilityAtlas, /const \[flowFrame, setFlowFrame\] = useState\(0\)/);
+  assert.match(mobilityAtlas, /const FLOW_WHEEL_PLAYBACK_INTERVAL_MS = 120/);
+  assert.match(mobilityAtlas, /\}, FLOW_WHEEL_PLAYBACK_INTERVAL_MS\);/);
+  assert.match(mobilityAtlas, /No interstate ties are drawn yet/);
+  assert.match(mobilityAtlas, /pair\.cumulativeValue <= 0/);
+  assert.match(mobilityAtlas, /completion >= 1/);
+  assert.match(mobilityAtlas, /context\.quadraticCurveTo\(control\.x, control\.y, target\.x, target\.y\)/);
+  assert.match(mobilityAtlas, /isFlowComplete \? "Replay" : "Play"/);
+  assert.match(mobilityAtlas, /if \(isFlowComplete\) setFlowFrame\(0\)/);
+  assert.match(mobilityAtlas, /fetch\(dynamics\.statePairArchive\.url\)/);
   assert.match(mobilityAtlas, /Which counties pulled travel in—or pushed it out/);
   assert.match(mobilityAtlas, /<MobilityStory/);
   assert.match(
@@ -567,6 +583,8 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     /context\.isPointInPath\(paths\.counties\[candidateIndex\], mapX, mapY\)/,
   );
   assert.match(styles, /\.mobility-timeline \{/);
+  assert.match(styles, /\.flow-wheel-timeline\s*\{[^}]*margin-bottom:/);
+  assert.match(styles, /\.flow-wheel-empty-note\s*\{/);
   assert.match(baseMobilitySectionTitleRule, /max-width: 18ch/);
   assert.match(baseMobilityFigureTitleRule, /max-width: 18ch/);
   assert.doesNotMatch(baseMobilitySectionTitleRule, /white-space: nowrap/);
@@ -626,6 +644,9 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(mobilityBuild, /county_in_weekly/);
   assert.match(mobilityBuild, /pulseBaseline/);
   assert.match(mobilityBuild, /KANGWEEKLYFLOW01/);
+  assert.match(mobilityBuild, /KANGSTATEPAIR001/);
+  assert.match(mobilityBuild, /rowSums\(state_pair_weekly\), pulse\$interstateObserved/);
+  assert.match(mobilityBuild, /colSums\(state_pair_weekly\), pairs\$value/);
   assert.equal(mobility.meta.coverageStart, "2019-01-07");
   assert.equal(mobility.meta.coverageEnd, "2022-01-02");
   assert.equal(mobility.meta.sourceFileCount, 156);
@@ -662,6 +683,20 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   );
   assert.equal(mobilityDynamics.pulse[0].weekStart, "2019-01-07");
   assert.equal(mobilityDynamics.pulse.at(-1).weekEnd, "2022-01-02");
+  const statePairArchive = mobilityDynamics.statePairArchive;
+  assert.equal(statePairArchive.version, 1);
+  assert.equal(statePairArchive.url, "/data/mobility-state-pairs.bin");
+  assert.equal(statePairArchive.weekCount, 156);
+  assert.equal(statePairArchive.pairCount, 1_275);
+  assert.equal(statePairArchive.fieldCount, 1);
+  assert.equal(statePairArchive.binaryHeaderBytes, 16);
+  assert.equal(statePairArchive.binaryBytes, 16 + (156 * 1_275 * 4));
+  assert.equal(mobilityStatePairsWeekly.byteLength, statePairArchive.binaryBytes);
+  assert.equal(
+    mobilityStatePairsWeekly.subarray(0, statePairArchive.binaryHeaderBytes).toString("hex"),
+    statePairArchive.buildId,
+  );
+  assert.equal(statePairArchive.pairOrder, "mobility.json statePairs archive-wide descending order");
   mobilityDynamics.pulse.forEach((row, index) => {
     assert.equal(row.seasonalWeek, (index % 52) + 1);
     assert.equal(row.withinCountyObserved + row.crossCountyObserved, row.totalObserved);
@@ -703,6 +738,28 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   const expectedCrossCounty = mobility.meta.intrastateCrossCountyObserved + mobility.meta.interstateObserved;
   assert.equal(inboundArchiveTotal, expectedCrossCounty);
   assert.equal(outboundArchiveTotal, expectedCrossCounty);
+
+  const statePairValue = (week, pair) => mobilityStatePairsWeekly.readUInt32LE(
+    statePairArchive.binaryHeaderBytes + (((week * statePairArchive.pairCount) + pair) * 4),
+  );
+  const statePairArchiveTotals = new Float64Array(statePairArchive.pairCount);
+  let interstateArchiveTotal = 0;
+  for (let week = 0; week < statePairArchive.weekCount; week += 1) {
+    let interstateWeekTotal = 0;
+    for (let pair = 0; pair < statePairArchive.pairCount; pair += 1) {
+      const value = statePairValue(week, pair);
+      interstateWeekTotal += value;
+      statePairArchiveTotals[pair] += value;
+    }
+    assert.equal(interstateWeekTotal, mobilityDynamics.pulse[week].interstateObserved);
+    interstateArchiveTotal += interstateWeekTotal;
+  }
+  mobility.statePairs.forEach((pair, pairIndex) => {
+    assert.equal(statePairArchiveTotals[pairIndex], pair.value);
+  });
+  assert.equal(interstateArchiveTotal, mobility.meta.interstateObserved);
+  assert.equal(statePairArchiveTotals[0], mobility.statePairs[0].value);
+  assert.equal(statePairArchiveTotals[74], mobility.statePairs[74].value);
   assert.deepEqual(
     new Set(mobility.counties.map((county) => county.fips)),
     new Set(countyMetadata.geometry.counties.map((county) => county.fips)),

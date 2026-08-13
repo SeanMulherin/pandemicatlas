@@ -29,6 +29,12 @@ project_root <- normalizePath(file.path(dirname(script_file), ".."), mustWork = 
 default_output <- file.path(project_root, "public", "data", "mobility.json")
 default_dynamics <- file.path(project_root, "public", "data", "mobility-dynamics.json")
 default_binary <- file.path(project_root, "public", "data", "mobility-weekly.bin")
+default_state_pair_binary <- file.path(
+  project_root,
+  "public",
+  "data",
+  "mobility-state-pairs.bin"
+)
 default_geometry <- file.path(project_root, "public", "data", "county-incidence-map.json")
 default_cache_root <- Sys.getenv(
   "KANG_CACHE_DIR",
@@ -43,6 +49,7 @@ parse_args <- function(args) {
     labels = default_output,
     dynamics = default_dynamics,
     binary = default_binary,
+    state_pair_binary = default_state_pair_binary,
     geometry = default_geometry
   )
   for (arg in args) {
@@ -51,6 +58,9 @@ parse_args <- function(args) {
     else if (startsWith(arg, "--labels=")) values$labels <- sub("^--labels=", "", arg)
     else if (startsWith(arg, "--dynamics=")) values$dynamics <- sub("^--dynamics=", "", arg)
     else if (startsWith(arg, "--binary=")) values$binary <- sub("^--binary=", "", arg)
+    else if (startsWith(arg, "--state-pair-binary=")) {
+      values$state_pair_binary <- sub("^--state-pair-binary=", "", arg)
+    }
     else if (startsWith(arg, "--geometry=")) values$geometry <- sub("^--geometry=", "", arg)
     else stop("Unknown argument: ", arg, call. = FALSE)
   }
@@ -202,7 +212,15 @@ read_week <- function(repo, path) {
   )
 }
 
-build_archive <- function(repo, output, labels, dynamics, binary, geometry) {
+build_archive <- function(
+  repo,
+  output,
+  labels,
+  dynamics,
+  binary,
+  state_pair_binary,
+  geometry
+) {
   weeks <- discover_week_files(repo)
   county_lookup <- load_county_lookup(labels)
   geometry_order <- load_geometry_order(geometry, county_lookup)
@@ -383,6 +401,31 @@ build_archive <- function(repo, output, labels, dynamics, binary, geometry) {
   setorder(directed, -value, source, target)
   setorder(pairs, -value, source, target)
 
+  pair_keys <- paste(pairs$source, pairs$target, sep = "\u001f")
+  state_pair_weekly <- matrix(0, nrow = nrow(weeks), ncol = nrow(pairs))
+  for (i in seq_len(nrow(weeks))) {
+    week_pairs <- pair_parts[[i]]
+    week_keys <- paste(week_pairs$source, week_pairs$target, sep = "\u001f")
+    pair_indices <- match(week_keys, pair_keys)
+    if (anyNA(pair_indices)) {
+      stop("A weekly interstate pair is absent from the archive pair order", call. = FALSE)
+    }
+    state_pair_weekly[i, pair_indices] <- week_pairs$value
+  }
+  state_pair_values <- as.vector(t(state_pair_weekly))
+  if (max(state_pair_values) > .Machine$integer.max) {
+    stop("A weekly interstate pair exceeds the UInt32-compatible atlas range", call. = FALSE)
+  }
+  if (!isTRUE(all.equal(rowSums(state_pair_weekly), pulse$interstateObserved))) {
+    stop("Weekly interstate pair totals do not reconcile with the archive pulse", call. = FALSE)
+  }
+  if (!isTRUE(all.equal(colSums(state_pair_weekly), pairs$value))) {
+    stop("Weekly interstate pair totals do not reconcile with the archive network", call. = FALSE)
+  }
+  if (!isTRUE(all.equal(sum(state_pair_weekly), interstate_observed))) {
+    stop("Weekly interstate pair totals do not reconcile with the archive total", call. = FALSE)
+  }
+
   result <- list(
     meta = list(
       source = "Kang weekly county mobility flows",
@@ -447,6 +490,24 @@ build_archive <- function(repo, output, labels, dynamics, binary, geometry) {
   close(binary_connection)
   on.exit(NULL, add = FALSE)
 
+  state_pair_binary_header <- charToRaw("KANGSTATEPAIR001")
+  state_pair_binary_build_id <- paste(
+    sprintf("%02x", as.integer(state_pair_binary_header)),
+    collapse = ""
+  )
+  dir.create(dirname(state_pair_binary), recursive = TRUE, showWarnings = FALSE)
+  state_pair_connection <- file(state_pair_binary, open = "wb")
+  on.exit(close(state_pair_connection), add = TRUE)
+  writeBin(state_pair_binary_header, state_pair_connection)
+  writeBin(
+    as.integer(round(state_pair_values)),
+    state_pair_connection,
+    size = 4L,
+    endian = "little"
+  )
+  close(state_pair_connection)
+  on.exit(NULL, add = FALSE)
+
   dynamics_result <- list(
     version = 1L,
     buildId = binary_build_id,
@@ -463,6 +524,20 @@ build_archive <- function(repo, output, labels, dynamics, binary, geometry) {
     balanceCap = balance_cap,
     pulseBaseline = "Each week is indexed to the corresponding ordinal week in the 52-week 2019 archive; 2019 = 100.",
     pulse = pulse,
+    statePairArchive = list(
+      version = 1L,
+      url = "/data/mobility-state-pairs.bin",
+      buildId = state_pair_binary_build_id,
+      binaryHeaderBytes = length(state_pair_binary_header),
+      binaryBytes = as.numeric(file.info(state_pair_binary)$size),
+      fieldCount = 1L,
+      fields = c("twoWayInterstateObserved"),
+      layout = "week-major, then mobility.json statePairs order, UInt32 little-endian",
+      weekCount = nrow(pulse),
+      pairCount = nrow(pairs),
+      pairOrder = "mobility.json statePairs archive-wide descending order",
+      methodology = "Each cell sums both directed visitor_flows records for one interstate state pair in one week."
+    ),
     methodology = list(
       countyFields = "Weekly inbound and outbound cross-county detected visitor observations; within-county observations are excluded.",
       balance = "Net balance equals inbound minus outbound. Map color uses a signed log scale capped at the archive-wide 99.5th percentile of absolute weekly county balance.",
@@ -477,6 +552,10 @@ build_archive <- function(repo, output, labels, dynamics, binary, geometry) {
   if (dynamics_result$binaryBytes != expected_binary_bytes) {
     stop("Weekly mobility binary size validation failed", call. = FALSE)
   }
+  expected_state_pair_bytes <- length(state_pair_binary_header) + length(state_pair_values) * 4
+  if (dynamics_result$statePairArchive$binaryBytes != expected_state_pair_bytes) {
+    stop("Weekly interstate pair binary size validation failed", call. = FALSE)
+  }
   dir.create(dirname(dynamics), recursive = TRUE, showWarnings = FALSE)
   write_json(
     dynamics_result,
@@ -488,6 +567,7 @@ build_archive <- function(repo, output, labels, dynamics, binary, geometry) {
   )
   message("Wrote ", normalizePath(dynamics, mustWork = TRUE))
   message("Wrote ", normalizePath(binary, mustWork = TRUE))
+  message("Wrote ", normalizePath(state_pair_binary, mustWork = TRUE))
   invisible(result)
 }
 
@@ -499,6 +579,7 @@ profile <- build_archive(
   args$labels,
   args$dynamics,
   args$binary,
+  args$state_pair_binary,
   args$geometry
 )
 cat(toJSON(list(meta = profile$meta, quality = profile$quality), auto_unbox = TRUE, pretty = TRUE), "\n")

@@ -1948,6 +1948,18 @@ button {
   background: var(--paper-light);
 }
 
+.flow-wheel-timeline {
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.flow-wheel-empty-note {
+  margin: 0;
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  line-height: 1.65;
+}
+
 .mobility-timeline > button {
   min-width: 8rem;
   padding: 1rem 1.25rem;
