@@ -37,6 +37,7 @@ html {
 
 body {
   margin: 0;
+  padding-top: 60px;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--sans);
@@ -95,50 +96,59 @@ button {
 /* Masthead */
 
 .site-header {
-  position: relative;
-  z-index: 20;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  width: 100%;
+  height: 60px;
+  background-color: #fff;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+.nav-container {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  min-height: 4.5rem;
-  padding: 0 var(--page-gutter);
-  border-bottom: 1px solid var(--ink);
-  background: rgba(246, 242, 233, 0.96);
-  backdrop-filter: blur(12px);
+  max-width: 1000px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
-.site-title {
-  max-width: calc(100% - 12rem);
-  color: var(--ink);
-  font-family: var(--serif);
-  font-size: clamp(1.05rem, 2.2vw, 1.45rem);
-  letter-spacing: -0.015em;
-  text-align: center;
+.site-logo a {
+  color: #666;
+  font-size: 1.5em;
+  font-weight: 500;
   text-decoration: none;
 }
 
-.home-button {
-  position: absolute;
-  left: var(--page-gutter);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.35rem;
-  padding: 0.55rem 0.9rem;
-  border: 1px solid var(--ink);
-  background: var(--ink);
-  color: var(--paper-light);
-  font-size: 0.64rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-decoration: none;
-  text-transform: uppercase;
-  transition: background-color 150ms ease, color 150ms ease;
+.main-nav {
+  position: static;
+  width: auto;
 }
 
-.home-button:hover {
-  background: var(--paper-light);
-  color: var(--ink);
+.nav-list {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 25px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-list li a {
+  color: #555;
+  font-size: 1em;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.nav-list li a:hover {
+  color: #f2849e;
 }
 
 .brand-lockup {
@@ -165,44 +175,6 @@ button {
   font-family: var(--mono);
   font-size: 0.67rem;
   letter-spacing: 0.04em;
-}
-
-.site-header nav {
-  display: flex;
-  align-items: stretch;
-  align-self: stretch;
-}
-
-.site-header nav a {
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 0 clamp(0.65rem, 1.45vw, 1.45rem);
-  color: var(--ink-soft);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-decoration: none;
-  text-transform: uppercase;
-}
-
-.site-header nav a::after {
-  position: absolute;
-  right: 0.8rem;
-  bottom: 0;
-  left: 0.8rem;
-  height: 3px;
-  background: var(--cases);
-  content: "";
-  opacity: 0;
-  transform: scaleX(0.35);
-  transition: opacity 160ms ease, transform 160ms ease;
-}
-
-.site-header nav a:hover::after,
-.site-header nav a:focus-visible::after {
-  opacity: 1;
-  transform: scaleX(1);
 }
 
 .archive-status {
@@ -2627,18 +2599,44 @@ button {
   }
 }
 
+@media (max-width: 900px) {
+  body {
+    padding-top: 104px;
+  }
+
+  .site-header {
+    height: 104px;
+    padding: 12px 0;
+  }
+
+  .nav-container {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  .main-nav {
+    width: 100%;
+  }
+
+  .nav-list {
+    justify-content: flex-start;
+    gap: 0.25rem 1rem;
+  }
+
+  .nav-list li a {
+    font-size: 0.95rem;
+  }
+}
+
 @media (max-width: 50rem) {
   :root {
     --page-gutter: 1.15rem;
   }
 
   html {
-    scroll-padding-top: 4rem;
-  }
-
-  .site-header {
-    position: relative;
-    min-height: 4rem;
+    scroll-padding-top: 7.5rem;
   }
 
   .archive-status {
@@ -3000,23 +2998,6 @@ button {
 }
 
 @media (max-width: 34rem) {
-  .site-header {
-    justify-content: center;
-  }
-
-  .home-button {
-    left: 0.7rem;
-    min-height: 2rem;
-    padding: 0.4rem 0.58rem;
-    font-size: 0.54rem;
-  }
-
-  .site-title {
-    max-width: calc(100% - 7.5rem);
-    font-size: 0.96rem;
-    line-height: 1.12;
-  }
-
   .hero-copy h1 {
     font-size: clamp(3.7rem, 18vw, 5.4rem);
   }

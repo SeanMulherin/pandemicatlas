@@ -106,7 +106,11 @@ test("server-renders the finished Pandemic Atlas shell", async () => {
   assert.match(html, /<title>The Pandemic Atlas<\/title>/i);
   assert.match(html, /Trace U\.S\. COVID-19 cases and deaths/i);
   assert.match(html, /\/og\.png/);
-  assert.match(html, /Exploring the US COVID-19 Pandemic/);
+  assert.match(html, />SM<\/a>/);
+  assert.match(html, />Apps<\/a>/);
+  assert.match(html, />Scholarship<\/a>/);
+  assert.match(html, />Teachings<\/a>/);
+  assert.match(html, />CV<\/a>/);
   assert.match(html, /A visual record of COVID-19 in the United States/);
   assert.match(html, /1,158 days/);
   assert.match(html, /103\.9M/);
@@ -206,8 +210,12 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.equal(socialCard.readUInt32BE(16), 1731);
   assert.equal(socialCard.readUInt32BE(20), 909);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
-  assert.match(headerRule, /position:\s*relative/);
-  assert.doesNotMatch(headerRule, /position:\s*sticky|top:\s*0/);
+  assert.match(headerRule, /position:\s*fixed/);
+  assert.match(headerRule, /top:\s*0/);
+  assert.match(headerRule, /height:\s*60px/);
+  assert.match(headerRule, /background-color:\s*#fff/);
+  assert.match(styles, /body\s*\{[^}]*padding-top:\s*60px/);
+  assert.match(styles, /@media \(max-width:\s*900px\)[\s\S]*?body\s*\{[^}]*padding-top:\s*104px/);
   assert.match(explorerControlsRule, /position:\s*sticky/);
   assert.match(explorerControlsRule, /top:\s*0/);
   assert.match(
@@ -225,7 +233,8 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(htmlRule, /scroll-padding-top:\s*10rem/);
   assert.match(page, /<CovidAtlas \/>/);
   assert.match(layout, /generateMetadata/);
-  assert.match(atlas, /Exploring the US COVID-19 Pandemic/);
+  assert.match(atlas, /className="site-logo"/);
+  assert.match(atlas, />Scholarship<\/a>/);
   assert.match(atlas, /className="hero-intro"/);
   assert.match(atlas, /I developed this historical atlas, recently enhanced with ChatGPT/);
   assert.match(atlas, /The New York Times national, state,\s*and county/);
@@ -248,7 +257,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     /font-size:\s*clamp\(1\.25rem,\s*4vw,\s*1\.75rem\)/,
   );
   assert.match(firstCssRule(".hero-ledger", phoneCss), /grid-template-columns:\s*1fr/);
-  assert.match(atlas, /href="https:\/\/seanmulherin\.github\.io\/">Home<\/a>/);
+  assert.match(atlas, /href="https:\/\/seanmulherin\.github\.io\/">SM<\/a>/);
   assert.match(atlas, /Nationwide Incidence/);
   assert.match(atlas, /Statewide Incidence/);
   assert.match(atlas, /<h2 className="states-title">Statewide Incidence<\/h2>/);

@@ -646,8 +646,19 @@ function ComparisonChart({
 function AtlasHeader() {
   return (
     <header className="site-header">
-      <a className="home-button" href="https://seanmulherin.github.io/">Home</a>
-      <a className="site-title" href="#top">Exploring the US COVID-19 Pandemic</a>
+      <div className="nav-container">
+        <div className="site-logo">
+          <a href="https://seanmulherin.github.io/">SM</a>
+        </div>
+        <nav className="main-nav" aria-label="Main navigation">
+          <ul className="nav-list">
+            <li><a href="https://seanmulherin.github.io/apps.html">Apps</a></li>
+            <li><a href="https://seanmulherin.github.io/papers.html">Scholarship</a></li>
+            <li><a href="https://seanmulherin.github.io/lectures.html">Teachings</a></li>
+            <li><a href="https://seanmulherin.github.io/resume.html">CV</a></li>
+          </ul>
+        </nav>
+      </div>
     </header>
   );
 }
