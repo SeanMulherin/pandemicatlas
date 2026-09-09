@@ -327,14 +327,21 @@ test("ships the complete local archive and bespoke preview assets", async () => 
     atlas.indexOf('<h2 className="states-title">Statewide Incidence</h2>')
       < atlas.indexOf('<h2 className="analysis-title">Statewide Waves</h2>'),
   );
-  assert.match(atlas, /Kang county traveler totals/);
+  assert.match(atlas, /Kang county visitor flows/);
   assert.match(atlas, /01 \/ Sources/);
-  assert.match(atlas, /all 156 official weekly county files/);
+  assert.match(atlas, /Kang repository’s 156 weekly county files/);
   assert.match(atlas, /January 7, 2019 through January 2, 2022/);
-  assert.match(atlas, /cumulative movements, not unique/);
+  assert.match(atlas, /published <code>visitor_flows<\/code> field/);
+  assert.match(atlas, /rather than unique people or inferred population/);
+  assert.match(atlas, /Plotted COVID-19 incidence values use/);
   assert.match(atlas, /NYT repository/);
   assert.match(atlas, /Kang repository/);
-  assert.match(atlas, /Kang methodology/);
+  assert.match(atlas, /Kang citation/);
+  assert.match(atlas, /NYT license/);
+  assert.match(atlas, /NYT tracker/);
+  assert.match(atlas, /Kang license/);
+  assert.match(atlas, /Times-derived data are provided for noncommercial use with attribution/);
+  assert.match(atlas, /THIRD_PARTY_NOTICES\.md/);
   assert.match(atlas, /County geometry/);
   assert.match(atlas, /https:\/\/github\.com\/GeoDS\/COVID19USFlows-WeeklyFlows/);
   assert.match(atlas, /https:\/\/doi\.org\/10\.1038\/s41597-020-00734-5/);

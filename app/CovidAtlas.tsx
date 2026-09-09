@@ -1206,16 +1206,18 @@ export function CovidAtlas() {
             <span>01 / Sources</span>
             <h3>The New York Times archive</h3>
             <p>
-              This explorer reads local snapshots of the Times’s public U.S., state, and county
-              data. The archive ends March 23, 2023, when its recurring collection ended.
+              This explorer reads local snapshots of data from The New York Times, based on
+              reports from state and local health agencies. The archive ends March 23, 2023, when
+              the Times ended its recurring collection.
             </p>
             <div className="methodology-secondary-source">
-              <h4>Kang county traveler totals</h4>
+              <h4>Kang county visitor flows</h4>
               <p>
-                The mobility figures aggregate all 156 official weekly county files, covering
-                January 7, 2019 through January 2, 2022 for the 50 states and D.C. Kang’s daily
-                county release ends April 15, 2021, while the weekly release continues beyond it;
-                observations are cumulative movements, not unique individuals.
+                The mobility figures aggregate the Kang repository’s 156 weekly county files,
+                covering January 7, 2019 through January 2, 2022 for the 50 states and D.C. They
+                sum the published <code>visitor_flows</code> field: estimated visitors detected by
+                SafeGraph between county pairs, rather than unique people or inferred population
+                movement.
               </p>
             </div>
           </article>
@@ -1223,9 +1225,9 @@ export function CovidAtlas() {
             <span>02 / Smoothing</span>
             <h3>Seven-day averages</h3>
             <p>
-              All plotted values use rolling seven-day averages to soften weekday reporting
-              cycles. “Per 100k” uses the archive’s population-normalized fields, based on 2019
-              Census estimates.
+              Plotted COVID-19 incidence values use the Times’s rolling seven-day averages to
+              soften weekday reporting cycles. “Per 100k” uses the archive’s
+              population-normalized fields, based on 2019 Census estimates.
             </p>
           </article>
           <article>
@@ -1248,10 +1250,24 @@ export function CovidAtlas() {
           </article>
         </div>
         <div className="source-strip">
-          <p>Data: The New York Times · Jan. 21, 2020—Mar. 23, 2023 · Kang weekly mobility · Jan. 7, 2019—Jan. 2, 2022</p>
+          <p>COVID-19: The New York Times · Jan. 21, 2020—Mar. 23, 2023 · Mobility: Kang et al. (2020) · Jan. 7, 2019—Jan. 2, 2022</p>
           <div className="source-links">
             <a href="https://github.com/nytimes/covid-19-data" target="_blank" rel="noreferrer">
               NYT repository <span aria-hidden="true">↗</span>
+            </a>
+            <a
+              href="https://github.com/nytimes/covid-19-data/blob/master/LICENSE"
+              target="_blank"
+              rel="noreferrer"
+            >
+              NYT license <span aria-hidden="true">↗</span>
+            </a>
+            <a
+              href="https://www.nytimes.com/interactive/2020/us/coronavirus-us-cases.html"
+              target="_blank"
+              rel="noreferrer"
+            >
+              NYT tracker <span aria-hidden="true">↗</span>
             </a>
             <a href="https://github.com/topojson/us-atlas" target="_blank" rel="noreferrer">
               County geometry <span aria-hidden="true">↗</span>
@@ -1268,9 +1284,29 @@ export function CovidAtlas() {
               target="_blank"
               rel="noreferrer"
             >
-              Kang methodology <span aria-hidden="true">↗</span>
+              Kang citation <span aria-hidden="true">↗</span>
+            </a>
+            <a
+              href="https://github.com/GeoDS/COVID19USFlows-WeeklyFlows/blob/master/LICENSE.txt"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Kang license <span aria-hidden="true">↗</span>
             </a>
           </div>
+          <p className="source-license-note">
+            Times-derived data are provided for noncommercial use with attribution. Kang mobility
+            derivatives retain the upstream repository’s MIT notice. This atlas reformats,
+            aggregates, and visualizes both sources; see the{" "}
+            <a
+              href="https://github.com/SeanMulherin/pandemicatlas/blob/main/THIRD_PARTY_NOTICES.md"
+              target="_blank"
+              rel="noreferrer"
+            >
+              third-party notices <span aria-hidden="true">↗</span>
+            </a>
+            .
+          </p>
         </div>
       </section>
 

@@ -2420,9 +2420,10 @@ button {
 
 .source-strip {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 2rem;
+  gap: 1rem 2rem;
   margin-top: clamp(2rem, 5vw, 5rem);
   padding: 1.25rem 0;
   border-top: 1px solid var(--ink);
@@ -2446,6 +2447,13 @@ button {
 
 .source-strip p {
   color: var(--ink-soft);
+}
+
+.source-strip .source-license-note {
+  flex-basis: 100%;
+  max-width: 74rem;
+  line-height: 1.65;
+  text-transform: none;
 }
 
 .source-strip a {
