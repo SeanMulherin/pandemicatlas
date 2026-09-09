@@ -725,6 +725,7 @@ function ErrorView({ message, onRetry }: { message: string; onRetry: () => void 
 export function CovidAtlas() {
   const explorerControlsRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<CovidData | null>(null);
+  const [stateArchiveReady, setStateArchiveReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [metric, setMetric] = useState<Metric>("cases");
@@ -768,24 +769,39 @@ export function CovidAtlas() {
     async function loadArchive() {
       setError(null);
       setData(null);
+      setStateArchiveReady(false);
       try {
-        const [nationalResponse, stateResponse] = await Promise.all([
-          fetch(atlasAssetUrl("data/us.csv"), { signal: controller.signal }),
-          fetch(atlasAssetUrl("data/us-states.csv"), { signal: controller.signal }),
-        ]);
-        if (!nationalResponse.ok || !stateResponse.ok) {
-          throw new Error("One or more archive files could not be reached.");
+        const nationalRequest = fetch(atlasAssetUrl("data/us.csv"), {
+          signal: controller.signal,
+          credentials: "omit",
+        });
+        const stateRequest = fetch(atlasAssetUrl("data/us-states.csv"), {
+          signal: controller.signal,
+          credentials: "omit",
+        });
+
+        const nationalResponse = await nationalRequest;
+        if (!nationalResponse.ok) {
+          throw new Error("The national archive file could not be reached.");
         }
-        const [nationalText, stateText] = await Promise.all([
-          nationalResponse.text(),
-          stateResponse.text(),
-        ]);
-        const national = parseNationalCsv(nationalText);
-        const states = parseStateCsv(stateText);
-        if (national.length === 0 || states.length === 0) {
-          throw new Error("The archive files were empty or did not match the expected format.");
+        const national = parseNationalCsv(await nationalResponse.text());
+        if (national.length === 0) {
+          throw new Error("The national archive was empty or did not match the expected format.");
         }
-        if (!ignore) setData(indexData(national, states));
+        if (!ignore) setData(indexData(national, []));
+
+        const stateResponse = await stateRequest;
+        if (!stateResponse.ok) {
+          throw new Error("The state archive file could not be reached.");
+        }
+        const states = parseStateCsv(await stateResponse.text());
+        if (states.length === 0) {
+          throw new Error("The state archive was empty or did not match the expected format.");
+        }
+        if (!ignore) {
+          setData(indexData(national, states));
+          setStateArchiveReady(true);
+        }
       } catch (caught) {
         if (controller.signal.aborted || ignore) return;
         setError(caught instanceof Error ? caught.message : "An unexpected loading error occurred.");
@@ -1030,6 +1046,8 @@ export function CovidAtlas() {
 
       </section>
 
+      {stateArchiveReady ? (
+        <>
       <section className="atlas-section states-section" id="states">
         <h2 className="states-title">Statewide Incidence</h2>
         <p className="states-instructions">
@@ -1148,7 +1166,19 @@ export function CovidAtlas() {
           </ol>
         </div>
       </section>
+        </>
+      ) : (
+        <section className="atlas-section states-section" id="states" aria-busy="true">
+          <h2 className="states-title">Statewide Incidence</h2>
+          <div className="state-map-status">
+            <span aria-hidden="true" />
+            <p>Loading the statewide archive…</p>
+          </div>
+        </section>
+      )}
 
+      {stateArchiveReady && (
+        <>
       <section
         className="atlas-section county-incidence-section"
         id="county-incidence"
@@ -1167,6 +1197,8 @@ export function CovidAtlas() {
         onCovidMetricChange={setMetric}
         onSectionPositionChange={updateExplorerControlHandoff}
       />
+        </>
+      )}
 
       <section className="methodology-section" id="methodology">
         <div className="methodology-grid">

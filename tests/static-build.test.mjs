@@ -9,6 +9,8 @@ test("builds a GitHub Pages app with base-aware assets and the complete archive"
   assert.match(html, /<title>The Pandemic Atlas<\/title>/);
   assert.match(html, /\/pandemicatlas\/assets\//);
   assert.match(html, /\/pandemicatlas\/favicon\.png/);
+  assert.match(html, /rel="preload" href="\/pandemicatlas\/data\/us\.csv" as="fetch"/);
+  assert.match(html, /rel="preload" href="\/pandemicatlas\/data\/us-states\.csv" as="fetch"/);
   assert.match(assetUrl, /__ATLAS_BASE_PATH__/);
 
   for (const path of [

@@ -236,6 +236,9 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /className="site-logo"/);
   assert.match(atlas, />Scholarship<\/a>/);
   assert.match(atlas, /className="hero-intro"/);
+  assert.match(atlas, /setData\(indexData\(national, \[\]\)\)/);
+  assert.match(atlas, /stateArchiveReady \? \(/);
+  assert.match(atlas, /Loading the statewide archive/);
   assert.match(atlas, /I developed this historical atlas, recently enhanced with ChatGPT/);
   assert.match(atlas, /The New York Times national, state,\s*and county/);
   assert.match(atlas, /mobility data described by\s*Kang et al\. \(2020\)/);
