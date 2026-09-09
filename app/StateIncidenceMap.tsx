@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { atlasAssetUrl } from "./assetUrl";
 
 interface CountyGeometry {
   state: string;
@@ -90,7 +91,7 @@ export default function StateIncidenceMap({
 
     async function loadMap() {
       try {
-        const response = await fetch("/data/county-incidence-map.json", {
+        const response = await fetch(atlasAssetUrl("data/county-incidence-map.json"), {
           signal: controller.signal,
         });
         if (!response.ok) throw new Error("The geographic state map could not be reached.");

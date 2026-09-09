@@ -13,6 +13,7 @@ import {
 import MobilityAtlas from "./MobilityAtlas";
 import CountyIncidenceMap from "./CountyIncidenceMap";
 import StateIncidenceMap from "./StateIncidenceMap";
+import { atlasAssetUrl } from "./assetUrl";
 
 type Metric = "cases" | "deaths";
 type Scale = "average" | "perCapita";
@@ -758,8 +759,8 @@ export function CovidAtlas() {
       setData(null);
       try {
         const [nationalResponse, stateResponse] = await Promise.all([
-          fetch("/data/us.csv", { signal: controller.signal }),
-          fetch("/data/us-states.csv", { signal: controller.signal }),
+          fetch(atlasAssetUrl("data/us.csv"), { signal: controller.signal }),
+          fetch(atlasAssetUrl("data/us-states.csv"), { signal: controller.signal }),
         ]);
         if (!nationalResponse.ok || !stateResponse.ok) {
           throw new Error("One or more archive files could not be reached.");

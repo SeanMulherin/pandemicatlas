@@ -258,7 +258,7 @@ test("ships the complete local archive and bespoke preview assets", async () => 
   assert.match(atlas, /MAX_SELECTED_STATES = 10/);
   assert.match(atlas, /<StateIncidenceMap/);
   assert.doesNotMatch(atlas, /State tile map|className="tile-map"|className=\{`state-tile/);
-  assert.match(stateMap, /fetch\("\/data\/county-incidence-map\.json"/);
+  assert.match(stateMap, /atlasAssetUrl\("data\/county-incidence-map\.json"\)/);
   assert.match(stateMap, /<svg/);
   assert.match(stateMap, /stateBordersPath/);
   assert.match(stateMap, /nationPath/);

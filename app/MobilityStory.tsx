@@ -15,6 +15,7 @@ import {
   isCountyArrowKey,
   spatialCountyIndex,
 } from "./countySpatialNavigation";
+import { atlasAssetUrl } from "./assetUrl";
 
 export interface MobilityStoryCounty {
   fips: string;
@@ -1040,9 +1041,9 @@ export default function MobilityStory({
     async function loadAssets() {
       try {
         const [metadataResponse, valuesResponse, mapResponse] = await Promise.all([
-          fetch("/data/mobility-dynamics.json", { signal: controller.signal }),
-          fetch("/data/mobility-weekly.bin", { signal: controller.signal }),
-          fetch("/data/county-incidence-map.json", { signal: controller.signal }),
+          fetch(atlasAssetUrl("data/mobility-dynamics.json"), { signal: controller.signal }),
+          fetch(atlasAssetUrl("data/mobility-weekly.bin"), { signal: controller.signal }),
+          fetch(atlasAssetUrl("data/county-incidence-map.json"), { signal: controller.signal }),
         ]);
         if (!metadataResponse.ok || !valuesResponse.ok || !mapResponse.ok) {
           throw new Error("The weekly mobility archive could not be reached.");

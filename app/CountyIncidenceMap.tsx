@@ -13,6 +13,7 @@ import {
   isCountyArrowKey,
   spatialCountyIndex,
 } from "./countySpatialNavigation";
+import { atlasAssetUrl } from "./assetUrl";
 
 type Metric = "cases" | "deaths";
 type Scale = "average" | "perCapita";
@@ -248,8 +249,8 @@ export default function CountyIncidenceMap({
     async function loadCountyAssets() {
       try {
         const [metadataResponse, valuesResponse] = await Promise.all([
-          fetch("/data/county-incidence-map.json", { signal: controller.signal }),
-          fetch("/data/county-incidence.bin", { signal: controller.signal }),
+          fetch(atlasAssetUrl("data/county-incidence-map.json"), { signal: controller.signal }),
+          fetch(atlasAssetUrl("data/county-incidence.bin"), { signal: controller.signal }),
         ]);
         if (!metadataResponse.ok || !valuesResponse.ok) {
           throw new Error("The county archive could not be reached.");

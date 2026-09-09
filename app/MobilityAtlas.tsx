@@ -9,6 +9,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import MobilityStory, { type MobilityCovidDatum } from "./MobilityStory";
+import { atlasAssetUrl } from "./assetUrl";
 
 interface MobilityMeta {
   source: string;
@@ -654,7 +655,7 @@ export default function MobilityAtlas({
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/data/mobility.json")
+    fetch(atlasAssetUrl("data/mobility.json"))
       .then((response) => {
         if (!response.ok) throw new Error(`Mobility data request failed (${response.status})`);
         return response.json() as Promise<MobilityData>;
