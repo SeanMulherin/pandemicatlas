@@ -663,46 +663,11 @@ function AtlasHeader() {
   );
 }
 
-function AtlasHero({ cases, deaths }: { cases: string; deaths: string }) {
-  return (
-    <section className="editorial-hero" id="top">
-      <div className="hero-copy">
-        <p className="hero-eyebrow">A visual record of COVID-19 in the United States</p>
-        <h1>1,158 days</h1>
-        <div className="hero-ledger" aria-label="Archive summary">
-          <div>
-            <span>Archive span</span>
-            <strong>Jan ’20—Mar ’23</strong>
-          </div>
-          <div>
-            <span>Reported cases*</span>
-            <strong>{cases}</strong>
-          </div>
-          <div>
-            <span>Reported deaths*</span>
-            <strong>{deaths}</strong>
-          </div>
-          <p>*Net sum of daily reports, including later corrections.</p>
-        </div>
-        <p className="hero-intro">
-          I developed this historical atlas, recently enhanced with ChatGPT, to support engaging
-          exploration of pertinent U.S. COVID-19 data. Drawing on The New York Times national, state,
-          and county COVID-19 archive and the anonymized cellphone-derived mobility data described by
-          Kang et al. (2020), I organize the page from nationwide incidence through statewide dynamics
-          and rankings to countywide patterns and human-mobility networks. The interactives are intended
-          to make temporal and geographic comparisons easier to explore while preserving the source and
-          methodological context needed for careful interpretation.
-        </p>
-      </div>
-    </section>
-  );
-}
-
 function LoadingView() {
   return (
-    <main className="covid-atlas" aria-busy="true">
+    <main className="covid-atlas" id="top" aria-busy="true">
       <AtlasHeader />
-      <AtlasHero cases="103.9M" deaths="1.1M" />
+      <h1 className="visually-hidden">The Pandemic Atlas</h1>
       <p className="visually-hidden" role="status">Loading the national and state archives…</p>
     </main>
   );
@@ -854,16 +819,6 @@ export function CovidAtlas() {
     return () => window.clearInterval(timer);
   }, [activeDates, isPlaying]);
 
-  const archiveTotals = useMemo(() => {
-    if (!data) return { cases: 0, deaths: 0 };
-    return data.national.reduce(
-      (totals, row) => ({
-        cases: totals.cases + row.cases,
-        deaths: totals.deaths + row.deaths,
-      }),
-      { cases: 0, deaths: 0 },
-    );
-  }, [data]);
 
   const nationalPeak = useMemo(() => {
     if (activeNational.length === 0) return undefined;
@@ -939,12 +894,9 @@ export function CovidAtlas() {
   const activePeriodLabel = periodId === "all" ? "the full archive" : activePeriod.label;
 
   return (
-    <main className="covid-atlas">
+    <main className="covid-atlas" id="top">
       <AtlasHeader />
-      <AtlasHero
-        cases={compactFormatter.format(archiveTotals.cases)}
-        deaths={compactFormatter.format(archiveTotals.deaths)}
-      />
+      <h1 className="visually-hidden">The Pandemic Atlas</h1>
 
       <div ref={explorerControlsRef} className="explorer-controls" aria-label="Explorer controls">
         <SegmentedControl<Metric>
