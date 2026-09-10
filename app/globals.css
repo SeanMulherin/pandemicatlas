@@ -1403,15 +1403,7 @@ button {
 /* Human mobility */
 
 .mobility-section {
-  background:
-    linear-gradient(rgba(236, 229, 215, 0.62), rgba(236, 229, 215, 0.62)),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0,
-      transparent calc(25% - 1px),
-      rgba(21, 25, 30, 0.045) calc(25% - 1px),
-      rgba(21, 25, 30, 0.045) 25%
-    );
+  background: var(--paper-light);
 }
 
 .mobility-section-heading {
@@ -1429,7 +1421,7 @@ button {
   margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
   border-top: 1px solid var(--ink);
   border-bottom: 1px solid var(--ink);
-  background: rgba(255, 253, 247, 0.42);
+  background: var(--paper-light);
 }
 
 .mobility-ledger > div {
@@ -1486,8 +1478,8 @@ button {
   margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
   margin-left: calc(-1 * var(--page-gutter));
   border: 1px solid var(--ink);
-  background: var(--ink);
-  color: var(--paper-light);
+  background: rgba(255, 255, 255, 0.97);
+  color: var(--ink);
 }
 
 .mobility-timeline-slot {
@@ -1504,8 +1496,8 @@ button {
   align-items: center;
   min-height: 4.55rem;
   padding: 0.9rem 1.1rem;
-  border: 1px solid rgba(255, 253, 247, 0.55);
-  color: rgba(255, 253, 247, 0.72);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink-soft);
   font-family: var(--mono);
   font-size: 0.6rem;
   letter-spacing: 0.04em;
@@ -1717,7 +1709,7 @@ button {
 .mobility-detail-panel {
   min-width: 0;
   padding: clamp(1.2rem, 2.4vw, 2rem);
-  background: rgba(236, 229, 215, 0.48);
+  background: var(--paper-light);
 }
 
 .mobility-detail-panel h4 {
@@ -1991,7 +1983,7 @@ button {
   padding: 1rem;
   border: 1px solid var(--ink);
   border-bottom: 0;
-  background: var(--ink);
+  background: var(--paper-light);
 }
 
 .mobility-spotlight-controls label {
@@ -2000,14 +1992,14 @@ button {
 }
 
 .mobility-spotlight-controls span {
-  color: rgba(255, 253, 247, 0.62);
+  color: var(--ink-faint);
 }
 
 .mobility-spotlight-controls select {
   width: 100%;
   min-height: 2.6rem;
   padding: 0.5rem 2rem 0.5rem 0.7rem;
-  border: 1px solid rgba(255, 253, 247, 0.55);
+  border: 1px solid var(--rule-strong);
   border-radius: 0;
   background: var(--paper-light);
   color: var(--ink);
@@ -2022,7 +2014,7 @@ button {
   align-items: center;
   padding: 0.9rem 1rem;
   border-bottom: 1px solid var(--ink);
-  background: rgba(236, 229, 215, 0.58);
+  background: var(--paper-light);
 }
 
 .mobility-lag-metric {
