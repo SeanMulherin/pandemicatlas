@@ -429,7 +429,7 @@ function PulseChart({
         metric === "cases" ? "rgba(0, 109, 119, 0.48)" : "rgba(169, 54, 62, 0.48)";
       const gradient = context.createLinearGradient(0, margin.top, 0, height);
       gradient.addColorStop(0, seriesWash);
-      gradient.addColorStop(1, "rgba(246, 242, 233, 0.02)");
+      gradient.addColorStop(1, "rgba(255, 255, 255, 0.02)");
 
       context.beginPath();
       context.moveTo(x(0), y(0));
@@ -462,7 +462,7 @@ function PulseChart({
       context.arc(cursorX, cursorY, 4.5, 0, Math.PI * 2);
       context.fillStyle = seriesColor;
       context.fill();
-      context.strokeStyle = "#fffdf5";
+      context.strokeStyle = "#ffffff";
       context.lineWidth = 2;
       context.stroke();
 
@@ -617,7 +617,7 @@ function ComparisonChart({
         context.arc(cursorX, pointY, 3.5, 0, Math.PI * 2);
         context.fillStyle = item.color;
         context.fill();
-        context.strokeStyle = "#fffdf5";
+        context.strokeStyle = "#ffffff";
         context.lineWidth = 1.5;
         context.stroke();
       }

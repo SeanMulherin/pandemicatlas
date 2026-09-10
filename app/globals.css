@@ -540,7 +540,7 @@ button {
 /* State motion */
 
 .states-section {
-  background: var(--paper-deep);
+  background: var(--paper-light);
 }
 
 .states-title {
@@ -1172,7 +1172,7 @@ button {
 /* County incidence */
 
 .county-incidence-section {
-  background: var(--paper-deep);
+  background: var(--paper-light);
 }
 
 .county-incidence-heading {

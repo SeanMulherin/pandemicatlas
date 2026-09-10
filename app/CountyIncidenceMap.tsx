@@ -368,7 +368,7 @@ export default function CountyIncidenceMap({
       0,
       0,
     );
-    context.fillStyle = "#fffdf7";
+    context.fillStyle = "#ffffff";
     context.fillRect(0, 0, assets.metadata.geometry.width, assets.metadata.geometry.height);
 
     paths.counties.forEach((path, index) => {
