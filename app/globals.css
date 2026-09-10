@@ -4,9 +4,9 @@
  */
 
 :root {
-  --paper: #f6f2e9;
-  --paper-deep: #ece5d7;
-  --paper-light: #fffdf7;
+  --paper: #ffffff;
+  --paper-deep: #f3f5f4;
+  --paper-light: #ffffff;
   --ink: #15191e;
   --ink-soft: #52565a;
   --ink-faint: #737575;
@@ -245,7 +245,7 @@ button {
   border-right: 1px solid var(--rule);
   border-bottom: 1px solid var(--ink);
   border-left: 1px solid var(--rule);
-  background: rgba(246, 242, 233, 0.97);
+  background: rgba(255, 255, 255, 0.97);
   backdrop-filter: blur(12px);
   transform: translateY(var(--explorer-handoff-offset));
   will-change: transform;
